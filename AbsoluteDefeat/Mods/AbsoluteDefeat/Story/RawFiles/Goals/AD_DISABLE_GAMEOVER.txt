@@ -1,0 +1,17 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+
+QRY
+QRY_GameOver_BlockGameOver()
+AND
+DB_PartyMembers((CHARACTER)_Character)
+AND
+IsDead(_Character, 0)
+THEN
+DB_NOOP(1);
+EXITSECTION
+
+ENDEXITSECTION

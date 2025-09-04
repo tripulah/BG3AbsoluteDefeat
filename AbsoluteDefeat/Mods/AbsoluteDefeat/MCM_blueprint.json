@@ -1,0 +1,62 @@
+{
+    "SchemaVersion": 1,
+    "Optional": true,
+    "ModName": "AbsoluteDefeat",
+    "ModDescription": "WIP",
+    "Tabs": [
+        {
+            "TabName": "General",
+            "TabId": "general",
+            "Sections": [
+                {
+                    "SectionId": "general_settings",
+                    "SectionName": "General settings",
+                    "Handles": {
+                        "NameHandle": "h178ba41dg596fg4ac8ga862g6ba83c016a09"
+                    },
+                    "Settings": [
+                        {
+                            "Id": "mod_enabled",
+                            "Name": "Enable mod",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "Toggle the mod on/off without uninstalling it.",
+                            "Tooltip": "Toggle the mod on/off",
+                            "Handles": {
+                                "DescriptionHandle": "hac675417g07a9g4f49ga187gcd7da9a9487a",
+                                "NameHandle": "hd82878f7g42fcg4878g820aga9d16a46d816"
+                            }
+                        },
+                        {
+                            "Id": "include_summons",
+                            "Name": "Include summons",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "Allow summons to fight when origin characters are downed.",
+                            "Tooltip": "Allow summons to fight when origin characters are downed",
+                            "Handles": {
+                                "DescriptionHandle": "hd4f19cb4g390fg4f80gb21cga3dc03e4e771",
+                                "NameHandle": "he190e517g9792g48adga932g4202d1f6c397"
+                            }
+                        },
+                        {
+                            "Id": "debug_level",
+                            "Name": "Debug level",
+                            "Type": "slider_int",
+                            "Default": 0,
+                            "Description": "0 = no debug, 1 = minimal, 2 = verbose debug logs.",
+                            "Options": {
+                                "Min": 0,
+                                "Max": 2
+                            },
+                            "Handles": {
+                                "DescriptionHandle": "h0abbc33dg7c7dg4ca8g8506g92530b9987ec",
+                                "NameHandle": "h86382c29g0ef8g40dbgb81ag65052c4cf035"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

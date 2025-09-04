@@ -1,0 +1,225 @@
+game.actions.statusOverrides.AD_ACTION_ALLY_ASSIST = Action
+{
+    function()
+        local source = GetStatusSource(me, "AD_ACTION_ALLY_ASSIST")
+
+        if (source ~= nil and GetDistance2DTo(me, source) > 1.5) then
+            local moveResult = MoveTo(source, MovementSpeed.Run, true, false, 1.0, 1.5, false)
+            if moveResult ~= error.MovementError.None then
+                DebugText(me, "Debug: MoveTo failed or run out of resources")
+            end
+
+            SteerTo(source)
+        elseif (source ~= nil and not source.IsDead and HasActiveStatus(source, "AD_DEFEATED")) then
+            SteerTo(source)
+            -- assist dialog
+            UseSpell("Help", source)
+            RemoveStatus(me, "AD_ACTION_ALLY_ASSIST", source)
+        elseif (source.IsDead) then
+            RemoveStatus(me, "AD_ACTION_ALLY_ASSIST")
+        end
+    end,
+
+    OnLeave = function()
+        StopAnimation(me)
+        RemoveStatus(me, "AD_ACTION_ALLY_ASSIST")
+    end,
+
+    Valid = function(node)
+        return
+            HasActiveStatus(me, "AD_ACTION_ALLY_ASSIST") and
+            not me.IsInCombat
+    end
+    ,
+    Priority = 485005
+}
+
+game.actions.statusOverrides.AD_ACTION_CAPTOR_KNOCKOUT = Action
+{
+    function()
+        local ad = Dialog("AD_Automated_Captor_Leave_01_a9fe3007-41c8-1926-c9a9-7e93ae313975")
+        StartAutomatedDialog(ad, true, me)
+        Sleep(4.0)
+        RemoveStatus(me, "AD_ACTION_CAPTOR_KNOCKOUT")
+    end,
+
+    OnLeave = function()
+        StopAnimation(me)
+        RemoveStatus(me, "AD_ACTION_CAPTOR_KNOCKOUT")
+    end,
+
+    Valid = function(node)
+        return
+            HasActiveStatus(me, "AD_ACTION_CAPTOR_KNOCKOUT") and
+            not me.IsInCombat
+    end
+    ,
+    Priority = 485004
+}
+
+game.actions.statusOverrides.AD_ACTION_CAPTOR_LOOT = Action
+{
+    function()
+        local source = GetStatusSource(me, "AD_ACTION_CAPTOR_LOOT")
+
+        local lootInAnimation = Animation("CINE_Kneel_Loot_IN_01_7029be61-5a0a-4d01-8109-5d9c8eeea90e")
+        local lootLoopAnimation = Animation("CINE_Kneel_Loot_LOOP_01_cf90b603-1cc2-4846-ae41-747ee41bcaf2")
+        local lootOutAnimation = Animation("CINE_Kneel_Loot_OUT_01_8665d057-d060-4e11-88af-bb5ad3ba003c")
+        local ad1 = Dialog("AD_Automated_Captor_Loot_01_3787a7c7-5efd-7204-8e7d-3944dc143cb2")
+        local ad2 = Dialog("AD_Automated_Captor_Loot_02_2e511e2e-7c9c-ad1d-b6a4-b8d7b987b62d")
+        if (source ~= nil and GetDistance2DTo(me, source) > 1.5) then
+            local moveResult = MoveTo(source, MovementSpeed.Walk, true, false, 1.0, 1.5, false)
+            if moveResult ~= error.MovementError.None then
+                DebugText(me, "Debug: MoveTo failed or run out of resources")
+            end
+
+            SteerTo(source)
+        elseif (source ~= nil and not source.IsDead) then
+            SteerTo(source)
+            -- steal dialog
+            StartAutomatedDialog(ad1, true, me)
+            --Sleep(1.5)
+            PlayLoopingAnimation(lootInAnimation, {lootLoopAnimation}, lootOutAnimation)
+            Sleep(2)
+            StartAutomatedDialog(ad2, true, me)
+            for i = 1, 10 do
+                ApplyStatus(source, "AD_VICTIM_LOOT_ITEM", true, 0, me)
+                Sleep(2)
+            end
+            --WaitForInterrupt()
+            StopAnimation(me)
+            RemoveStatus(me, "AD_ACTION_CAPTOR_LOOT", source)
+        elseif (source.IsDead) then
+            RemoveStatus(me, "AD_ACTION_CAPTOR_LOOT")
+        end
+    end,
+
+    OnLeave = function()
+        StopAnimation(me)
+        RemoveStatus(me, "AD_ACTION_CAPTOR_LOOT")
+    end,
+
+    Valid = function(node)
+        return
+            HasActiveStatus(me, "AD_ACTION_CAPTOR_LOOT") and
+            not me.IsInCombat
+    end
+    ,
+    Priority = 485003
+}
+
+game.actions.statusOverrides.AD_ACTION_CAPTOR_TIE = Action
+{
+    function()
+        local source = GetStatusSource(me, "AD_ACTION_CAPTOR_TIE")
+        local ad = Dialog("AD_Automated_Captor_Tie_01_5ba87109-4fdf-d482-08e9-78510a3a47f3")
+        --local tieAnimation = Animation()
+
+        if (source ~= nil and GetDistance2DTo(me, source) > 1.5) then
+            local moveResult = MoveTo(source, MovementSpeed.Walk, false, false, 1.0, 1.5, false)
+            if moveResult ~= error.MovementError.None then
+                DebugText(me, "Debug: MoveTo failed or run out of resources")
+            end
+
+            SteerTo(source)
+        elseif (source ~= nil) then
+            SteerTo(source)
+            StartAutomatedDialog(ad, true, me)
+            UseSpell("Target_AD_Restrain", source)
+            
+            Sleep(2)
+            RemoveStatus(me, "AD_ACTION_CAPTOR_TIE", source)
+        end
+    end,
+    Valid = function(node)
+        return
+            HasActiveStatus(me, "AD_ACTION_CAPTOR_TIE") and
+            not me.IsInCombat
+    end
+    ,
+    OnLeave = function()
+        RemoveStatus(me, "AD_ACTION_CAPTOR_TIE")
+    end,
+    Priority = 485002
+}
+
+game.actions.statusOverrides.AD_ACTION_CAPTOR_BYSTANDER = Action
+{
+    function()
+        local source = GetStatusSource(me, "AD_ACTION_CAPTOR_BYSTANDER")
+        local cheerAnimation = Animation("CINE_Cheer_VictoriousFist_a2fba9da-dae8-4bd9-8a31-6de79f6a6422")
+        local clapAnimation = Animation("CINE_Cheer_AgreeClap_01_8775cd9a-9d7c-408b-aa4b-6a557f71e353")
+        local laughAnimation = Animation("CINE_Laugh_01_3b854156-3588-4178-acd7-e7aa6fda1fae")
+        local randomAnims = {cheerAnimation, clapAnimation, laughAnimation}
+
+        local ad1 = Dialog("AD_Automated_Captor_Taunt_01_689d12a5-7264-916d-aa53-f60d20a9b971")
+        local ad2 = Dialog("AD_Automated_captor_Taunt_02_bc0f2276-0262-dff1-7701-4436579f970f")
+        local ad3 = Dialog("AD_Automated_captor_Taunt_03_be439f77-fe9b-1cb0-bc6f-a67f9a3cb09d")
+        local ad4 = Dialog("AD_Automated_captor_Taunt_04_34ef2099-8d09-dd76-47df-6168d3bd8799")
+        local randomAD = {ad1, ad2, ad3, ad4}
+
+        if (source ~= nil and GetDistance2DTo(me, source) > 3.5) then
+            local moveResult = MoveTo(source, MovementSpeed.Walk, true, false, 1.0, 1.5, false)
+            if moveResult ~= error.MovementError.None then
+                DebugText(me, "Debug: MoveTo failed or run out of resources")
+            end
+        elseif (source ~= nil) then
+            SteerTo(source)
+            local randomAnim = randomAnims[math.random(#randomAnims)]
+            if math.random() < 0.5 and not IsInDialog(me, false) then
+                StartAutomatedDialog(randomAD[math.random(#randomAD)], true, me)
+            end
+            PlayAnimation(randomAnim)
+            -- if me.CanSpeak and not IsInDialog(me, false) then
+            --     StartCheckedAutomatedDialogRateLimitedImmediate(randomAD[math.random(#randomAD)], 1.0 + math.random() * 30, 20.0, false, me) 
+            -- end
+            Sleep(math.random(4,12))
+        end
+    end,
+
+    OnLeave = function()
+        StopAnimation(me)
+    end,
+
+    Valid = function(node)
+        return
+            HasActiveStatus(me, "AD_ACTION_CAPTOR_BYSTANDER") and
+            not HasActiveStatus(me, "AD_ACTION_CAPTOR_LOOT") and
+            not HasActiveStatus(me, "AD_ACTION_CAPTOR_TIE") and
+            not HasActiveStatus(me, "AD_ACTION_CAPTOR_KNOCKOUT") and
+            not me.IsInCombat
+    end
+    ,
+    Priority = 485001
+}
+
+game.actions.statusOverrides.HAG_MASK_CONTROLLED = Action
+{
+    function()
+        local HAG_HagLair
+        local HAG_Masks_WanderTrigger 
+        if CheckCurrentGameLevel("WLD_Main_A") then 
+            HAG_HagLair = Entity("S_HAG_HagLair_f84e3319-4a1d-483c-a718-dee3bff70d07")
+            HAG_Masks_WanderTrigger = Entity("S_HAG_Masks_WanderTrigger_e44f657c-59a0-4b85-9b9a-cb8999da50d0")
+            if IsInTrigger(me, HAG_HagLair.Trigger) then
+                try
+                    Wander(HAG_Masks_WanderTrigger, 6.0)
+                catch e if ls.CheckType(e, error.MovementFailed) then
+                    Wander(3.0, 6.0)
+                end
+                Sleep(6.0)
+            else
+                WaitForInterrupt()
+            end
+        else
+            WaitForInterrupt()
+        end            
+    end,
+    Valid = function(node)
+        return
+            HasActiveStatus(me, "HAG_MASK_CONTROLLED") and
+            not me.IsInCombat
+    end
+    ,
+    Priority = 486000
+}

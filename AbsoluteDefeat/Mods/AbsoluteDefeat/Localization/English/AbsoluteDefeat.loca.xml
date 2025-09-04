@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<contentList>
+    <content contentuid="hddf8f9a4gab5eg435eg8c6dg3d254b1459fd" version="1">Subdued</content>
+    <content contentuid="h9c035c32g3b10g462bgb8eegb347660fa66d" version="1">Subdue Downed Enemy</content>
+    <content contentuid="h65173af3g80bcg4b5cgaf75g73c5cc294390" version="1">Defeated</content>
+    <content contentuid="ha61d9461g40ebg4f45g9168gc5d0e2af24e4" version="1">Got your ass whooped.</content>
+    <content contentuid="h3cb282a7g6e04g4eb3g805agcd0f2c128015" version="1">Item Stolen!</content>
+    <content contentuid="h493c6c25g281dg4ebbg8369g8a3fc28e9918" version="1">An enemy has stolen an item from your inventory.</content>
+    <content contentuid="h6ff54620g3d28g4181gb496ge1e75f46ccea" version="1">Equipment Stolen!</content>
+    <content contentuid="h5063d0bbg0682g489ag8ff1g20c6f8bcf47c" version="1">An enemy has stolen some of your gear.</content>
+    <content contentuid="hb91838ffg91adg4931ga090gaef5d8730962" version="1">Gold Stolen!</content>
+    <content contentuid="hbccbaa67g329ag4431g9e0bgb05e9a54a864" version="1">An enemy has stolen all your gold.</content>
+</contentList>

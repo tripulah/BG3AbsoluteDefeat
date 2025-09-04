@@ -1,0 +1,100 @@
+
+new entry "AD_ACTION_ALLY_ASSIST"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_VICTIM_LOOT_HELPER"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_ACTION_CAPTOR_LOOT_ITEM"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_VICTIM_LOOT_ITEM"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_ACTION_CAPTOR_TIE"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_ACTION_CAPTOR_BYSTANDER"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_ACTION_CAPTOR_LOOT"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_ACTION_CAPTOR_KNOCKOUT"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_RESTRAIN"
+type "StatusData"
+data "StatusType" "INCAPACITATED"
+// Shackled
+data "DisplayName" "h226daba0gdf02g4f2agb86bg941dd9f2813a;2"
+// Chained to the ground with iron shackles.
+data "Description" "h8d5da0ddgcfedg412cga9fag082f1a77bc02;2"
+data "AnimationLoop" "447e9421-2e12-4ce9-ae24-e272df5476bd"
+data "StillAnimationPriority" "Downed"
+data "UseLyingPickingState" "Yes"
+data "Icon" "statIcons_GOB_GoblinPriest_Chains"
+data "Boosts" "DetectDisturbancesBlock(true);DialogueBlock()"
+data "OnApplyFunctors" "BreakConcentration();RemoveStatus(RAGE);RemoveStatus(AD_DEFEATED);RemoveStatus(DOWNED);RemoveStatus(LIE_DYING_VULNERABLE);RemoveStatus(LIE_DYING)"
+data "StatusPropertyFlags" "AllowLeaveDisallowJoinCombat"
+data "StatusGroups" "SG_Helpable_Condition"
+
+new entry "AD_DEFEATED"
+type "StatusData"
+data "StatusType" "INCAPACITATED"
+using "LIE_DYING"
+// Downed
+data "DisplayName" "h65173af3g80bcg4b5cgaf75g73c5cc294390"
+// You are defeated, and considered out of combat.
+data "Description" "ha61d9461g40ebg4f45g9168gc5d0e2af24e4"
+data "StatusPropertyFlags" "DisableOverhead;AllowLeaveDisallowJoinCombat"
+data "OnApplyFunctors" "Stabilize()"
+
+new entry "AD_ITEM_STEAL"
+type "StatusData"
+data "StatusType" "BOOST"
+data "Icon" "Action_DisarmingAttack_Melee"
+data "FormatColor" "Orange"
+data "StatusPropertyFlags" "ForceOverhead;DisableCombatlog"
+// Item Stolen!
+data "DisplayName" "h3cb282a7g6e04g4eb3g805agcd0f2c128015"
+// An enemy has stolen something from your inventory.
+data "Description" "h493c6c25g281dg4ebbg8369g8a3fc28e9918"
+
+new entry "AD_ARMOR_STEAL"
+type "StatusData"
+data "StatusType" "BOOST"
+data "Icon" "Action_DisarmingAttack_Melee"
+data "FormatColor" "Orange"
+data "StatusPropertyFlags" "ForceOverhead;DisableCombatlog"
+// Equipment Stolen!
+data "DisplayName" "h6ff54620g3d28g4181gb496ge1e75f46ccea"
+// An enemy has stolen  peice of your armor.
+data "Description" "h5063d0bbg0682g489ag8ff1g20c6f8bcf47c"
+
+new entry "AD_GOLD_STEAL"
+type "StatusData"
+data "StatusType" "BOOST"
+data "Icon" "Action_DisarmingAttack_Melee"
+data "FormatColor" "Orange"
+data "StatusPropertyFlags" "ForceOverhead;DisableCombatlog"
+// Gold Stolen!
+data "DisplayName" "hb91838ffg91adg4931ga090gaef5d8730962"
+// An enemy has stolen all your gold.
+data "Description" "hbccbaa67g329ag4431g9e0bgb05e9a54a864"
