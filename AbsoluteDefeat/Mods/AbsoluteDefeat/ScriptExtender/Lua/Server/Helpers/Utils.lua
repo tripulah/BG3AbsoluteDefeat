@@ -18,8 +18,23 @@ function Utils.Debug(text, debugLevel)
         debugLevel = 1
     end
     if Utils.MCMGet("debug_level") >= debugLevel then
-        _P("AD: " .. text)
+        _P("AbsoluteDefeat: " .. text)
     end
+end
+
+function Utils.Error(text)
+    Ext.Utils.PrintError("AbsoluteDefeat: [ERROR] " .. text)
+end
+
+function Utils.Warn(text)
+    Ext.Utils.PrintWarning("AbsoluteDefeat: [WARN] " .. text)
+end
+
+function Utils.NilOrEmpty(thing)
+    if thing == "" or thing == nil then
+        return true
+    end
+    return false
 end
 
 function Utils.PercentToReal(pct)

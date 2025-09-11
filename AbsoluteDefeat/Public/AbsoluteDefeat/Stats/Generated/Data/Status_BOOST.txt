@@ -9,7 +9,7 @@ type "StatusData"
 data "StatusType" "BOOST"
 data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
 
-new entry "AD_ACTION_CAPTOR_LOOT_ITEM"
+new entry "AD_LOOT_ITEM"
 type "StatusData"
 data "StatusType" "BOOST"
 data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
@@ -20,6 +20,11 @@ data "StatusType" "BOOST"
 data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
 
 new entry "AD_ACTION_CAPTOR_TIE"
+type "StatusData"
+data "StatusType" "BOOST"
+data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
+
+new entry "AD_ACTION_CAPTOR_SPARE"
 type "StatusData"
 data "StatusType" "BOOST"
 data "StatusPropertyFlags" "DisableOverhead;DisableCombatlog;DisablePortraitIndicator"
@@ -64,6 +69,7 @@ data "DisplayName" "h65173af3g80bcg4b5cgaf75g73c5cc294390"
 // You are defeated, and considered out of combat.
 data "Description" "ha61d9461g40ebg4f45g9168gc5d0e2af24e4"
 data "StatusPropertyFlags" "DisableOverhead;AllowLeaveDisallowJoinCombat"
+data "StatusGroups" "SG_Helpable_Condition"
 data "OnApplyFunctors" "Stabilize()"
 
 new entry "AD_ITEM_STEAL"
