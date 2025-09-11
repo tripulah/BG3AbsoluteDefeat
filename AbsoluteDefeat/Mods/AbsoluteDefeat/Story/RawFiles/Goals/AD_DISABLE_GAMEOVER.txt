@@ -9,7 +9,9 @@ QRY_GameOver_BlockGameOver()
 AND
 DB_PartyMembers((CHARACTER)_Character)
 AND
-IsDead(_Character, 0)
+DB_Players((CHARACTER)_Character)
+AND
+NOT DB_Dead(_Character)
 THEN
 DB_NOOP(1);
 EXITSECTION

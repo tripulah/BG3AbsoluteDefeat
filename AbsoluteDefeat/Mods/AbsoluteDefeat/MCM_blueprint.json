@@ -2,7 +2,7 @@
     "SchemaVersion": 1,
     "Optional": true,
     "ModName": "AbsoluteDefeat",
-    "ModDescription": "WIP",
+    "ModDescription": "A post-combat defeat framework.",
     "Tabs": [
         {
             "TabName": "General",
@@ -54,6 +54,24 @@
                                 "NameHandle": "h86382c29g0ef8g40dbgb81ag65052c4cf035"
                             }
                         }
+                    ]
+                }
+            ]
+        },
+        {
+            "TabName": "Scenarios",
+            "TabId": "scenarios",
+            "Sections": [
+                {
+                    "SectionName": "Possible Scenarios",
+                    "SectionId": "scenariolist",
+                    "SectionDescription": "Possible scenarios that occur when your party has been defeated (loads once in-game).",
+                    "Handles": {
+                        "NameHandle": "hcd2df097g1352g462dgaa63gc182d7fc80e1",
+                        "DescriptionHandle": "h9cd9801dg2524g45d7gb6dcg6279b5c396a0"
+                    },
+                    "Settings": [
+
                     ]
                 }
             ]

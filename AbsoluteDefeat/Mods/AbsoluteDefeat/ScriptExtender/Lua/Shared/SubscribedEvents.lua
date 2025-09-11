@@ -17,8 +17,7 @@ function SubscribedEvents.SubscribeToEvents()
     Ext.Osiris.RegisterListener("StatusRemoved", 4, "after", conditionalWrapper(AD.StatusRemoved))
     Ext.Osiris.RegisterListener("LeftCombat", 2, "after", conditionalWrapper(AD.LeftCombat))
     Ext.Osiris.RegisterListener("FleeFromCombat", 2, "after", conditionalWrapper(AD.FleeFromCombat))
-    Ext.RegisterConsoleCommand("surrender", conditionalWrapper(AD.Surrender))
-    Ext.RegisterConsoleCommand("lastcombat", conditionalWrapper(AD.GetLastCombat))
+    Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", conditionalWrapper(AD.LevelGameplayStarted))
 end
 
 return SubscribedEvents
