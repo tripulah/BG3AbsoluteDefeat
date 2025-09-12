@@ -16,24 +16,12 @@
                     },
                     "Settings": [
                         {
-                            "Id": "mod_enabled",
-                            "Name": "Enable mod",
-                            "Type": "checkbox",
-                            "Default": true,
-                            "Description": "Toggle the mod on/off without uninstalling it.",
-                            "Tooltip": "Toggle the mod on/off",
-                            "Handles": {
-                                "DescriptionHandle": "hac675417g07a9g4f49ga187gcd7da9a9487a",
-                                "NameHandle": "hd82878f7g42fcg4878g820aga9d16a46d816"
-                            }
-                        },
-                        {
                             "Id": "include_summons",
                             "Name": "Include summons",
                             "Type": "checkbox",
                             "Default": true,
-                            "Description": "Allow summons to fight when origin characters are downed.",
-                            "Tooltip": "Allow summons to fight when origin characters are downed",
+                            "Description": "Allow summons to continue fighting when the player characters are downed.",
+                            "Tooltip": "Allow summons to continue fighting when the player characters are downed",
                             "Handles": {
                                 "DescriptionHandle": "hd4f19cb4g390fg4f80gb21cga3dc03e4e771",
                                 "NameHandle": "he190e517g9792g48adga932g4202d1f6c397"

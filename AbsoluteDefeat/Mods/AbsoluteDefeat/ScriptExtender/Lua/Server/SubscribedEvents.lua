@@ -3,11 +3,7 @@ SubscribedEvents = {}
 function SubscribedEvents.SubscribeToEvents()
     local function conditionalWrapper(handler)
         return function(...)
-            if Utils.MCMGet("mod_enabled") then
-                handler(...)
-            else
-                Utils.Debug("Event handling is disabled.", 2)
-            end
+            handler(...)
         end
     end
 
@@ -17,6 +13,8 @@ function SubscribedEvents.SubscribeToEvents()
     Ext.Osiris.RegisterListener("StatusRemoved", 4, "after", conditionalWrapper(AD.StatusRemoved))
     Ext.Osiris.RegisterListener("LeftCombat", 2, "after", conditionalWrapper(AD.LeftCombat))
     Ext.Osiris.RegisterListener("FleeFromCombat", 2, "after", conditionalWrapper(AD.FleeFromCombat))
+    Ext.Osiris.RegisterListener("DeathSaveStable", 1, "after", conditionalWrapper(AD.Stabilized))
+
     Ext.Osiris.RegisterListener("Died", 1, "after", conditionalWrapper(AD.Died))
     Ext.RegisterConsoleCommand("surrender", conditionalWrapper(AD.Surrender))
     Ext.RegisterConsoleCommand("lastcombat", conditionalWrapper(AD.GetLastCombat))
@@ -53,7 +51,7 @@ function SubscribedEvents.SubscribeToEvents()
     end)
 
     Ext.Osiris.RegisterListener("CastSpell", 5, "after", function(caster, spell, spellType, spellElement, storyActionID)
-        Utils.Debug("Spell: " .. spell)
+        --Utils.Debug("Spell: " .. spell)
     end)
 
 end

@@ -434,12 +434,12 @@ function AD.StatusApplied(object, status, causee, storyActionID)
     if status == "AD_VICTIM_LOOT_ITEM" then
         local weapon = Osi.GetEquippedWeapon(object)
 
-        if weapon ~= nil and Osi.HasActiveStatus(object, "WEAPON_BOND") == 0
-                         and Osi.HasActiveStatus(object, "MAG_INVISIBLE_WEAPON") == 0
-                         and Osi.HasActiveStatus(object, "PACT_BLADE") == 0
-                         and Osi.HasActiveStatus(object, "FLAME_BLADE") == 0
-                         and Osi.HasActiveStatus(object, "SHADOW_BLADE") == 0
-                         and Osi.HasActiveStatus(object, "SHILLELAGH") == 0 then
+        if weapon ~= nil and Osi.HasActiveStatus(weapon, "WEAPON_BOND") == 0
+                         and Osi.HasActiveStatus(weapon, "MAG_INVISIBLE_WEAPON") == 0
+                         and Osi.HasActiveStatus(weapon, "PACT_BLADE") == 0
+                         and Osi.HasActiveStatus(weapon, "FLAME_BLADE") == 0
+                         and Osi.HasActiveStatus(weapon, "SHADOW_BLADE") == 0
+                         and Osi.HasActiveStatus(weapon, "SHILLELAGH") == 0 then
             Utils.Debug("WEAPON GOT: " .. weapon)
             Osi.ApplyStatus(object, "DISARM_STEAL", 0, 100, causee)
             return
@@ -555,6 +555,14 @@ end
 
 function AD.Died(object)
     Osi.PROC_GameOver_CheckGameOver();
+end
+
+function AD.Stabilized(object)
+    if Osi.IsInCombat(object) == 0 and Osi.HasActiveStatus(object, "AD_DEFEATED") == 0 then
+        Utils.Debug(object .. " stabilized out of combat, reviving.")
+        Osi.ApplyStatus(object, "AD_OOC_DOWNED", 100, 0)
+    end
+
 end
 
 
