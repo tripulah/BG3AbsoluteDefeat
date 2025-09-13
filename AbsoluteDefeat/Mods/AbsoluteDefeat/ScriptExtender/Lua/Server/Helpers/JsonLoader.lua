@@ -1,7 +1,8 @@
-local configFilePathPattern = string.gsub("Mods/%s/ScriptExtender/AbsoluteDefeatConfig.json", "'", "\'")
+local authorConfigFilePathPattern = string.gsub("Mods/%s/ScriptExtender/AbsoluteDefeat.AuthorConfig.json", "'", "\'")
+local playerConfigFilePathPattern = string.gsub("Mods/%s/ScriptExtender/AbsoluteDefeat.PlayerConfig.json", "'", "\'")
 
-local function ConvertToPayload(data, modGUID)
-	Utils.Debug("Entering ConvertToPayload", 2)
+local function CreateAuthorConfigPayload(data, modGUID)
+	Utils.Debug("Entering CreateAuthorConfigPayload", 2)
 	local payload = {
 		ModGuid = modGUID,
 		CustomDownedStatusList = {},
@@ -23,12 +24,24 @@ local function ConvertToPayload(data, modGUID)
 		}
 	end
 
+	-- override with player specific settings
+
+	local playerConfig = TryLoadPlayerConfigForMod(modGUID)
+
+	if playerConfig ~= nil then
+		for id,scenario in pairs(playerConfig.Scenarios) do
+			if payload.Scenarios[id] ~= nil then
+				payload.Scenarios[id].Weight = scenario.Weight
+			end
+		end
+	end
+
 	return payload
 end
 
 local function SubmitData(data, modGUID)
 	Utils.Debug("Entering SubmitData", 2)
-	Api.ImportScenarios(ConvertToPayload(data, modGUID))
+	Api.ImportScenarios(CreateAuthorConfigPayload(data, modGUID))
 end
 
 ---@param configStr string
@@ -51,8 +64,8 @@ function LoadConfigFiles()
 	Utils.Debug("Entering LoadConfigFiles", 2)
 	for _, uuid in pairs(Ext.Mod.GetLoadOrder()) do
 		local modData = Ext.Mod.GetMod(uuid)
-		local filePath = configFilePathPattern:format(modData.Info.Directory)
-		local config = Ext.IO.LoadFile(filePath)
+		local filePath = authorConfigFilePathPattern:format(modData.Info.Directory)
+		local config = Ext.IO.LoadFile(filePath, "data")
 		if config ~= nil and config ~= "" then
 			Utils.Debug("Found config for Mod: " .. Ext.Mod.GetMod(uuid).Info.Name)
 				local b, err = xpcall(TryLoadConfig, debug.traceback, config, uuid)
@@ -63,8 +76,20 @@ function LoadConfigFiles()
 	end
 
 	Utils.Debug("Finished loading the scenarios, sending to client.")
-	--Utils.PrintTable(AD.Scenarios)
 	Ext.Net.BroadcastMessage("AbsoluteDefeat_ScenariosLoaded", Ext.Json.Stringify(AD.Scenarios))
+end
+
+function TryLoadPlayerConfigForMod(modGuid)
+	local modData = Ext.Mod.GetMod(modGuid)
+	local filePath = playerConfigFilePathPattern:format(modData.Info.Directory)
+	local jsonContent = Ext.IO.LoadFile(filePath)
+	local config = Ext.Json.Parse(jsonContent)
+	
+    if not config or not config.Scenarios then
+        Utils.Error("Invalid config structure in " .. filePath)
+        return
+    end
+	return config
 end
 
 --- Updates the weight of a scenario in the config JSON.
@@ -74,13 +99,12 @@ end
 function UpdateConfigWeight(ModGUID, ScenarioId, Weight)
     -- Get mod info (for resolving file path)
     local modData = Ext.Mod.GetMod(ModGUID)
-    local filePath = configFilePathPattern:format(modData.Info.Directory)
+    local filePath = playerConfigFilePathPattern:format(modData.Info.Directory)
 
     -- Load the JSON file
     local jsonContent = Ext.IO.LoadFile(filePath)
-    if not jsonContent then
-        Utils.Error("Could not load config file at " .. filePath)
-        return
+    if jsonContent == nil then
+        RestorePlayerConfig()
     end
 
     local config = Ext.Json.Parse(jsonContent)
@@ -91,8 +115,8 @@ function UpdateConfigWeight(ModGUID, ScenarioId, Weight)
 
     -- Find the scenario and update weight
     local updated = false
-    for _, scenario in ipairs(config.Scenarios) do
-        if scenario.Id == ScenarioId then
+    for id, scenario in pairs(config.Scenarios) do
+        if id == ScenarioId then
             scenario.Weight = Weight
             updated = true
             break
@@ -109,6 +133,39 @@ function UpdateConfigWeight(ModGUID, ScenarioId, Weight)
     Utils.Debug("Updated Weight for " .. ScenarioId .. " to " .. Weight)
 end
 
+function RestorePlayerConfig()
+	local modData = Ext.Mod.GetMod(ModuleUUID)
+	local playerFilePath = playerConfigFilePathPattern:format(modData.Info.Directory)
+	local authorFilePath = authorConfigFilePathPattern:format(modData.Info.Directory)
+	local config = Ext.IO.LoadFile(playerFilePath)
+	if config == nil then
+		Utils.Warn("Could not find config file at: " .. playerFilePath .. " creating one.")
+		local authorContent = Ext.IO.LoadFile(authorFilePath, "data")
+		if authorContent ~= nil then
+			local authorConfig = Ext.Json.Parse(authorContent)
+			if not authorConfig or not authorConfig.Scenarios then
+				Utils.Error("Invalid config structure in " .. authorFilePath)
+				return
+			end
+
+			local playerConfig = {
+				FileVersion = 1,
+				ModGuid = ModuleUUID,
+				Scenarios = {}
+			}
+
+			for _, scenario in pairs(authorConfig.Scenarios) do
+				playerConfig.Scenarios[scenario.Id] = { Weight = scenario.Weight }
+			end
+
+			-- encode to JSON
+			SaveJSONFile(playerFilePath, playerConfig)
+		else
+			Utils.Error("Could not find config file at: " .. authorFilePath)
+		end
+	end
+end
+
 --- Saves the given content to a JSON file.
 --- @param filePath string The file path to save the content to.
 --- @param content table The table with content to save to the file.
@@ -118,18 +175,4 @@ function SaveJSONFile(filePath, content)
     Utils.Debug("[SaveJSONFile] File saved to " .. filePath)
 end
 
-local function LoadConfig()
-    -- hacky way of making the config appear in the AppSettings folder
-    local modData = Ext.Mod.GetMod(ModuleUUID)
-    local filePath = configFilePathPattern:format(modData.Info.Directory)
-    local config = Ext.IO.LoadFile(filePath)
-    if config == nil then
-		Utils.Warn("Creating the AbsoluteDefeat config file.")
-        config = Ext.IO.LoadFile(filePath, "data")
-    end
-    if config ~= nil then
-        Ext.IO.SaveFile(filePath, config)
-    end
-end
-
-LoadConfig()
+RestorePlayerConfig()

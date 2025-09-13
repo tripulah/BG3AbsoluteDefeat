@@ -3,7 +3,6 @@ Api = {}
 --- @param payload table Payload matching the parameters described above.
 function Api.ImportScenarios(payload)
 	Utils.Debug("Entering ImportScenario", 2)
-	Utils.PrintTable(payload)
 	if Ext.Mod.IsModLoaded(payload.ModGuid) then
 		if payload.Scenarios then
 			Utils.Debug("Importing Scenario")

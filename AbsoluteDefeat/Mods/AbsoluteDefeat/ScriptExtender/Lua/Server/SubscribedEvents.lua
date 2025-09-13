@@ -24,7 +24,6 @@ function SubscribedEvents.SubscribeToEvents()
     Ext.RegisterNetListener("AbsoluteDefeat_Update_Slider", function(channel, payload)
         Utils.Debug("Updating slider from client request: ", 2)
         local data = Ext.Json.Parse(payload)
-        Utils.PrintTable(data)
         local uuid = data.ModUUID
 
         local mod = Ext.Mod.GetMod(uuid)
