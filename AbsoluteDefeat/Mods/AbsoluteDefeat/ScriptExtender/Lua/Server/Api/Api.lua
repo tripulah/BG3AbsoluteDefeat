@@ -8,7 +8,11 @@ function Api.ImportScenarios(payload)
 		if payload.Scenarios then
 			Utils.Debug("Importing Scenario")
 			for _,scenario in pairs(payload.Scenarios) do
-				AD.Scenarios[scenario.Id] = scenario
+				if scenario.Situational then
+					AD.SituationalScenarios[scenario.Id] = scenario
+				else
+					AD.Scenarios[scenario.Id] = scenario
+				end
 			end
 		end
 

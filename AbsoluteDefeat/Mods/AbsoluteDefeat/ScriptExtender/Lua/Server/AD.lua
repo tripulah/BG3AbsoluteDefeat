@@ -1,22 +1,50 @@
 AD = {}
 
-AD.Scenarios = {}
-AD.VarFixedString = "AbolsuteDefeatScenario"
-function GetActiveDefeatScenarioVarFixedString(object)
-    for _, scenario in pairs(AD.Scenarios) do
-        if Osi.GetVarFixedString(object, AD.VarFixedString) == scenario.Id then
-            Utils.Debug("OBJECT " .. object .. " has an active scenario: " .. scenario.Id)
-            return scenario.Id
+AD.Scenarios = {} -- scenarios in the random selection list
+AD.SituationalScenarios = {} -- scenarios that are not included in the random selection
+AD.ActiveScenario = "AbsoluteDefeatActiveScenario" -- varfixedstring attached to an object, used for determining next defeat scenario to play.
+
+
+function GetActiveDefeatScenarioIdFromCombat(combatguid)
+    local combatants = DBUtils.GetCombatants(combatguid)
+    local scenarioId = GetActiveDefeatScenarioIdFromObject(combatants[1])
+    for _, combatant in pairs(combatants) do
+        if scenarioId ~= GetActiveDefeatScenarioIdFromObject(combatant) then
+            Utils.Warn("Combatants in combat " .. combatguid .. " have a different defeat scenario set up.")
         end
+    end
+    return scenarioId
+end
+
+function GetActiveDefeatScenarioIdFromObject(object)
+    local scenarioId = Osi.GetVarFixedString(object, AD.ActiveScenario)
+
+    if not Utils.NilOrEmpty(scenarioId) and (not Utils.NilOrEmpty(AD.Scenarios[scenarioId]) or not Utils.NilOrEmpty(AD.SituationalScenarios[scenarioId])) then
+        --Utils.Debug("OBJECT " .. object .. " has an active scenario: " .. scenarioId)
+        return scenarioId
     end
 end
 
-function SetActiveDefeatScenarioVarFixedString(scenarioid, object)
+function SetActiveDefeatScenarioIdByCombat(combatguid, scenarioid)
+    local combatants = DBUtils.GetCombatants(combatguid)
+    for _, combatant in pairs(combatants) do
+        SetActiveDefeatScenarioIdByObject(scenarioid, combatant)
+    end
+end
+
+function SetActiveDefeatScenarioIdByObject(scenarioid, object)
     if AD.Scenarios[scenarioid] ~= nil then
+        if not Utils.NilOrEmpty(Osi.GetVarFixedString(object, AD.ActiveScenario)) then
+            Utils.Warn("Overriding existing activedefeat scenario on object: " .. object .. " old: " .. Osi.GetVarFixedString(object, AD.ActiveScenario))
+        end
         Utils.Debug("Set AbolsuteDefeatScenario var to: " .. scenarioid .. " on object: " .. object)
-        Osi.SetVarFixedString(object, AD.VarFixedString, scenarioid)
+        Osi.SetVarFixedString(object, AD.ActiveScenario, scenarioid)
+    elseif AD.SituationalScenarios[scenarioid] ~= nil then
+        Utils.Debug("Set AbolsuteDefeatScenario var to: " .. scenarioid .. " on object: " .. object)
+        Osi.SetVarFixedString(object, AD.ActiveScenario, scenarioid)
     else
-        Utils.Error("Could not set AbsoluteDefeatScario var because the Scenario with an id of " .. scenarioid .. " was not found!")
+        Utils.Warn("ScenarioID of " .. scenarioid .. " was not found in ADScenarios list, but it might have not loaded yet, so set the varfixedstring anyway")
+        Osi.SetVarFixedString(object, AD.ActiveScenario, scenarioid)
     end
 end
 
@@ -197,28 +225,32 @@ function InitDefeatOnParty(combatguid)
     end
 end
 
-function ClearActiveDefeatVarFixedStringByObject(object)
-    local scenarioid = GetActiveDefeatScenarioVarFixedString(object)
+function ClearActiveDefeatScenariosByObject(object)
+    local scenarioid = GetActiveDefeatScenarioIdFromObject(object)
     if not Utils.NilOrEmpty(scenarioid) then
         Utils.Debug(object .. " has var ActiveDefeatScenario: [" .. scenarioid .. "]. CLEARING!")
-        Osi.SetVarFixedString(object, AD.VarFixedString, "")
+        Osi.SetVarFixedString(object, AD.ActiveScenario, "")
     end
 end
 
-function ClearAllActiveDefeatScenarioVarFixedStringsByCombat(combatguid)
+function ClearAllActiveDefeatScenariosByCombat(combatguid)
     local participated = DBUtils.GetCombatants(combatguid)
     for _, participant in pairs(participated) do
-        ClearActiveDefeatVarFixedStringByObject(participant)
+        ClearActiveDefeatScenariosByObject(participant)
     end
 end
 
 function AD.CleanUpDefeat(combatguid)
     local participated = DBUtils.GetCombatants(combatguid)
     for _, participant in pairs(participated) do
-        ClearActiveDefeatVarFixedStringByObject(participant)
+        ClearActiveDefeatScenariosByObject(participant)
         Osi.RemoveStatus(participant, "AD_DEFEATED")
         Osi.RemoveStatus(participant, "DOWNED")
     end
+end
+
+function AD.OverrideDefeatScenarioForCombat(combatguid, overrideScenarioId)
+    SetActiveDefeatScenarioIdByCombat(combatguid, overrideScenarioId)
 end
 
 function StartDefeatScenario(combatguid)    
@@ -285,6 +317,14 @@ function StartDefeatScenario(combatguid)
         Utils.Debug("Enemies are the victors.")
         Utils.PrintTable(enemies)
         Utils.PrintTable(defeatedNotImprisonedParty)
+        -- If ActiveScenario already exists in this combat, chose it instead of a random one
+        local overrideScenarioId = GetActiveDefeatScenarioIdFromCombat(combatguid)
+        if not Utils.NilOrEmpty(overrideScenarioId) then
+            Utils.Debug("Existing Defeat Scenario [ " .. overrideScenarioId .. " ] has been set combat " .. combatguid .. " skipping random select.")
+            Ext.ModEvents.AbsoluteDefeat.DefeatScenarioStarted:Throw({combatGuid = combatguid, captors = enemies, victims = defeatedNotImprisonedParty, scenarioId = overrideScenarioId})
+            return
+        end
+        -- Random Scenario Selection
         local humanoidEnemies = {}
         for i, enemy in ipairs(enemies) do
             if (Osi.IsTagged(enemy, "HUMANOID_7fbed0d4-cabc-4a9d-804e-12ca6088a0a8") == 1
@@ -300,11 +340,11 @@ function StartDefeatScenario(combatguid)
             -- set defeated scenario tag to participants then start defeat scenario
             if scenarioid ~= nil then
                 for _,enemy in pairs(humanoidEnemies) do
-                    SetActiveDefeatScenarioVarFixedString(scenarioid, enemy)
+                    SetActiveDefeatScenarioIdByObject(scenarioid, enemy)
                 end
                 
                 for _,victim in pairs(defeatedNotImprisonedParty) do
-                    SetActiveDefeatScenarioVarFixedString(scenarioid, victim)
+                    SetActiveDefeatScenarioIdByObject(scenarioid, victim)
                 end
                 Ext.ModEvents.AbsoluteDefeat.DefeatScenarioStarted:Throw({combatGuid = combatguid, captors = humanoidEnemies, victims = defeatedNotImprisonedParty, scenarioId = scenarioid})
             else
@@ -350,7 +390,7 @@ end
 
 function AD.CombatStarted(combat)
     Utils.Debug("COMBAT [" .. combat .. "] Started")
-    ClearAllActiveDefeatScenarioVarFixedStringsByCombat(combat)
+    ClearAllActiveDefeatScenariosByCombat(combat)
     local party = DBUtils.GetPartyCombatants(combat)
     for _, member in ipairs(party) do
         if Osi.HasActiveStatus(member, "AD_DEFEATED") then
@@ -410,7 +450,7 @@ function AD.StatusApplied(object, status, causee, storyActionID)
     end
 
     if string.sub(status, 1, 16) == "AD_ACTION_CAPTOR" and causee ~= nil then
-        local scenarioid = GetActiveDefeatScenarioVarFixedString(object)
+        local scenarioid = GetActiveDefeatScenarioIdFromObject(object)
         if not Utils.NilOrEmpty(scenarioid) then
             Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionStarted:Throw({scenarioId = scenarioid, victim = causee, captor = object, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
         end
@@ -418,7 +458,7 @@ function AD.StatusApplied(object, status, causee, storyActionID)
     end
 
     if string.sub(status, 1, 16) == "AD_ACTION_VICTIM" and causee ~= nil then
-        local scenarioid = GetActiveDefeatScenarioVarFixedString(object)
+        local scenarioid = GetActiveDefeatScenarioIdFromObject(object)
         if not Utils.NilOrEmpty(scenarioid) then
             Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionStarted:Throw({scenarioId = scenarioid, victim = object, captor = object, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
         end
@@ -496,14 +536,14 @@ function AD.StatusRemoved(object, status, causee, storyActionID)
     end
 
     if string.sub(status, 1, 16) == "AD_ACTION_CAPTOR" then
-        local scenarioid = GetActiveDefeatScenarioVarFixedString(object)
+        local scenarioid = GetActiveDefeatScenarioIdFromObject(object)
         if not Utils.NilOrEmpty(scenarioid) then
             Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionCompleted:Throw({scenarioId = scenarioid, victim = causee, captor = object, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
         end
     end
 
     if string.sub(status, 1, 16) == "AD_ACTION_VICTIM" then
-        local scenarioid = GetActiveDefeatScenarioVarFixedString(object)
+        local scenarioid = GetActiveDefeatScenarioIdFromObject(object)
         if not Utils.NilOrEmpty(scenarioid) then
             Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionStarted:Throw({scenarioId = scenarioid, victim = object, captor = causee, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
         end
@@ -511,25 +551,25 @@ function AD.StatusRemoved(object, status, causee, storyActionID)
 end
 
 function AD.EnteredCombat(object, combatGuid)
-    GetActiveDefeatScenarioVarFixedString(object)
+    --GetActiveDefeatScenarioIdFromObject(object)
 end
 
 function AD.GetDefeatContextFromObject(object)
     local cb = DBUtils.GetPreviousCombatFromEntity(object)
     local enemies = DBUtils.GetEnemyCombatants(cb)
     local partyVictims = DBUtils.GetPartyCombatants(cb)
-    local scenario = GetActiveDefeatScenarioVarFixedString(object)
+    local scenario = GetActiveDefeatScenarioIdFromObject(object)
     local enemiesf = {}
     local partyVictimsf = {}
 
     for _,enemy in pairs(enemies) do
-        if GetActiveDefeatScenarioVarFixedString(enemy) ~= nil then
+        if GetActiveDefeatScenarioIdFromObject(enemy) ~= nil then
             table.insert(enemiesf, enemy)
         end
     end
 
     for _,partyMember in pairs(partyVictims) do
-        if GetActiveDefeatScenarioVarFixedString(partyMember) ~= nil then
+        if GetActiveDefeatScenarioIdFromObject(partyMember) ~= nil then
             table.insert(partyVictimsf, partyMember)
         end
     end
@@ -568,7 +608,7 @@ end
 
 -- Commands --
 
-function AD.Surrender()
+function AD.CmdSurrender()
     local activeCombats = DBUtils.GetActivePartyCombats()
     if #activeCombats > 0 then
         local partyMembers = DBUtils.GetActiveOriginCombatants(activeCombats[1])
@@ -579,7 +619,7 @@ function AD.Surrender()
     end
 end
 
-function AD.Undefeat()
+function AD.CmdUndefeat()
     local combats = DBUtils.GetPreviousPartyCombats()
     for _,combat in ipairs(combats) do
         AD.CleanUpDefeat(combat)
@@ -591,9 +631,14 @@ function AD.Undefeat()
     end
 end
 
-function AD.GetLastCombat()
+function AD.CmdGetLastCombat()
     local lastcombat = DBUtils.GetPreviousCombatFromEntity(Osi.GetHostCharacter())
     Utils.Debug(lastcombat)
 end
 
+function AD.CmdForceScenario()
+    local combat = DBUtils.GetActivePartyCombats()[1]
+    AD.OverrideDefeatScenarioForCombat(combat, "Spare_5d50854a-3d0a-42b2-926b-f9359416977c")
+    local sn = GetActiveDefeatScenarioIdFromCombat(combat)
+end
 return AD
