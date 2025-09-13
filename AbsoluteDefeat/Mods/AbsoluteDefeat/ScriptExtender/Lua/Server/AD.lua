@@ -200,12 +200,10 @@ function IsActivePartyDefeated(combatGuid)
 end
 
 function InitDefeatOnParty(combatguid)
-    if Waypoints[Utils.GetCurrentLevel()] == nil then
-        Utils.Debug("LEVEL " .. Utils.GetCurrentLevel() .. " IS NOT SUPPORTED, ABORTING DEFEAT.")
+    if Osi.IsNarrativeCombat(combatguid) == 1 then
+        Utils.Debug(combatguid .. " is a NarrativeCombat, aborting defeat scenario.")
         return
     end
-    
-
     local alivePartyMembers = DBUtils.GetDefeatedActiveParty(combatguid)
     if not Utils.MCMGet("include_summons") then
 
@@ -253,7 +251,13 @@ function AD.OverrideDefeatScenarioForCombat(combatguid, overrideScenarioId)
     SetActiveDefeatScenarioIdByCombat(combatguid, overrideScenarioId)
 end
 
-function StartDefeatScenario(combatguid)    
+function StartDefeatScenario(combatguid)
+    local overrideScenarioId = GetActiveDefeatScenarioIdFromCombat(combatguid)
+    if Waypoints[Utils.GetCurrentLevel()] == nil and Utils.NilOrEmpty(overrideScenarioId) then
+        Utils.Debug("LEVEL " .. Utils.GetCurrentLevel() .. " IS NOT SUPPORTED, ABORTING DEFEAT.")
+        return
+    end
+    
     local defeatedparty = DBUtils.GetPartyInADDefeatStatus(combatguid)
     Utils.Debug("LOSERS: ")
     Utils.PrintTable(defeatedparty)
@@ -318,7 +322,6 @@ function StartDefeatScenario(combatguid)
         Utils.PrintTable(enemies)
         Utils.PrintTable(defeatedNotImprisonedParty)
         -- If ActiveScenario already exists in this combat, chose it instead of a random one
-        local overrideScenarioId = GetActiveDefeatScenarioIdFromCombat(combatguid)
         if not Utils.NilOrEmpty(overrideScenarioId) then
             Utils.Debug("Existing Defeat Scenario [ " .. overrideScenarioId .. " ] has been set combat " .. combatguid .. " skipping random select.")
             Ext.ModEvents.AbsoluteDefeat.DefeatScenarioStarted:Throw({combatGuid = combatguid, captors = enemies, victims = defeatedNotImprisonedParty, scenarioId = overrideScenarioId})
