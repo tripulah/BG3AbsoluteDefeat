@@ -14,11 +14,12 @@ function SubscribedEvents.SubscribeToEvents()
     Ext.Osiris.RegisterListener("LeftCombat", 2, "after", conditionalWrapper(AD.LeftCombat))
     Ext.Osiris.RegisterListener("FleeFromCombat", 2, "after", conditionalWrapper(AD.FleeFromCombat))
     Ext.Osiris.RegisterListener("DeathSaveStable", 1, "after", conditionalWrapper(AD.Stabilized))
-
     Ext.Osiris.RegisterListener("Died", 1, "after", conditionalWrapper(AD.Died))
-    Ext.RegisterConsoleCommand("surrender", conditionalWrapper(AD.Surrender))
-    Ext.RegisterConsoleCommand("lastcombat", conditionalWrapper(AD.GetLastCombat))
-    Ext.RegisterConsoleCommand("undefeat", conditionalWrapper(AD.Undefeat))
+
+    Ext.RegisterConsoleCommand("surrender", conditionalWrapper(AD.CmdSurrender))
+    Ext.RegisterConsoleCommand("lastcombat", conditionalWrapper(AD.CmdGetLastCombat))
+    Ext.RegisterConsoleCommand("undefeat", conditionalWrapper(AD.CmdUndefeat))
+    Ext.RegisterConsoleCommand("force", conditionalWrapper(AD.CmdForceScenario))
 
     Ext.RegisterNetListener("AbsoluteDefeat_Update_Slider", function(channel, payload)
         Utils.Debug("Updating slider from client request: ", 2)
@@ -49,11 +50,6 @@ function SubscribedEvents.SubscribeToEvents()
             LoadConfigFiles()
         end
     end)
-
-    Ext.Osiris.RegisterListener("CastSpell", 5, "after", function(caster, spell, spellType, spellElement, storyActionID)
-        --Utils.Debug("Spell: " .. spell)
-    end)
-
 end
 
 return SubscribedEvents
