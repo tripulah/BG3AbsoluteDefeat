@@ -1,6 +1,6 @@
 # Absolute Defeat
-
-Absolute Defeat provides players with alternative outcomes after being defeated in a combat ecounter.
+Nexus page: https://www.nexusmods.com/baldursgate3/mods/18573
+Absolute Defeat provides players with alternative outcomes after being defeated in a combat encounter. Encourages continuous gameplay.
 
 ## Features
 
@@ -8,7 +8,7 @@ Absolute Defeat has two main gameplay mechanics, "Defeated State" and "Defeat Sc
 
 #### Defeated State
 
-During combat, when all participating party members are downed, instead of receiving a gameover and asked to reload, your party enters in a Defeated State, which acts similar to the Stabilized Downed Condition. If the combat ends whilst your party is in a Defeated State, a post-combat "Defeat Scenario" is chosen at random and played. Note that gameovers triggered through other means like dialog choices remain unaffected by this mod.
+During combat, when all participating party members are downed, instead of receiving a game over and being asked to reload, your party enters a Defeated State, which functions similarly to the Stabilized Downed Condition. If combat ends while your party is in a Defeated State, a post-combat "Defeat Scenario" is randomly chosen and played. Note that game overs triggered by other means, such as dialog choices, remain unaffected by this mod.
 
 #### Defeat Scenarios
 
@@ -21,7 +21,7 @@ Neutral Victory
 - The party members' defeated state expires after a few seconds
 
 Enemy Victory
-- An enemy defeat scenario is randomly chosen
+- An enemy defeat scenario is randomly chosen (note: mod authors can override the random selection)
 
 
 Currently Absolute Defeat natively supports two enemy defeat scenarios.
@@ -47,5 +47,8 @@ Download the .zip file and install using BG3MM or manually extract to your mods 
 - Can be installed or uninstalled at any time
 
 ## For Modders
+See the [WIKI](https://github.com/tripulah/BG3AbsoluteDefeat/wiki)
 
+Absolute Defeat supports an API and Mod Events that allow mod authors to create their own enemy
+defeat scenarios, which become accessible in the configuration menu.
 A sample mod that creates a custom defeat scenario can be found [here]
