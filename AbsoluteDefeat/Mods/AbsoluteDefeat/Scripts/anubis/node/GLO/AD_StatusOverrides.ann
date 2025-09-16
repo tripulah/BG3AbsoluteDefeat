@@ -182,13 +182,16 @@ game.actions.statusOverrides.AD_ACTION_CAPTOR_TIE = Action
             end
 
             SteerTo(source)
-        elseif (source ~= nil and not HasActiveStatus(source, "AD_RESTRAIN")) then
+        elseif (source ~= nil and not source.IsDead and not HasActiveStatus(source, "AD_RESTRAIN")) then
             SteerTo(source)
             Sleep(0.5)
             StartAutomatedDialog(randpretie[math.random(#randpretie)], false, me)
             Sleep(0.5)
             UseSpell("Target_AD_Restrain", source, nil, nil, nil, true, true, false, false, true)
         elseif (source ~= nil and HasActiveStatus(source, "AD_RESTRAIN")) then
+            StartAutomatedDialog(randposttie[math.random(#randposttie)], true, me)
+            RemoveStatus(me, "AD_ACTION_CAPTOR_TIE", source)
+        elseif (source ~= nil and source.IsDead) then
             StartAutomatedDialog(randposttie[math.random(#randposttie)], true, me)
             RemoveStatus(me, "AD_ACTION_CAPTOR_TIE", source)
         end
@@ -225,7 +228,7 @@ game.actions.statusOverrides.AD_ACTION_CAPTOR_BYSTANDER = Action
             if moveResult ~= error.MovementError.None then
                 DebugText(me, "Debug: MoveTo failed or run out of resources")
             end
-        elseif (source ~= nil) then
+        elseif (source ~= nil and not source.IsDead) then
             SteerTo(source)
             local randomAnim = randomAnims[math.random(#randomAnims)]
             if math.random() < 0.5 and not IsInDialog(me, false) then

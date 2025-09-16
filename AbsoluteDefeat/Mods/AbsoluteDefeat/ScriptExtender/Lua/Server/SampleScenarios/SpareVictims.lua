@@ -19,11 +19,13 @@ function Spare.DefeatScenarioActionCompleted(e)
     -- end defeat
     if status == "AD_ACTION_CAPTOR_SPARE" then
         if Osi.IsInCombat(captor) == 0 then
-            Spare.CleanUpDefeat(defeatContext)
-            Spare.KickOutVictims(defeatContext.victims)
-        else
-            Spare.CleanUpDefeat(defeatContext)
+            if Osi.CanAllPartiesLongRest() == 1 then
+                Spare.KickOutVictims(defeatContext.victims)
+            else
+                Spare.LetVictimsGo(defeatContext.victims)
+            end
         end
+        Spare.CleanUpDefeat(defeatContext)
     end
 end
 
@@ -40,10 +42,17 @@ function Spare.StartSpareScript(captors, victims)
     Osi.ApplyStatus(mainPerp, "AD_ACTION_CAPTOR_SPARE", -1, 1, mainVictim)
 end
 
+function Spare.LetVictimsGo(victims)
+    for index, victim in ipairs(victims) do
+        Osi.ApplyStatus(victim, "AD_SPARED_TEMP", 36, 1)
+    end
+end
+
 function Spare.KickOutVictims(victims)
     for index, victim in ipairs(victims) do
         Utils.Fade(victim, 5.0)
         Osi.PROC_WaypointTeleportTo(victim, Waypoints[Utils.GetCurrentLevel()][1])
+        Osi.ApplyStatus(victim, "AD_DEFEATED_TEMP", 12, 1)
     end
 end
 

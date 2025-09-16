@@ -29,11 +29,13 @@ function TieAndRansack.DefeatScenarioActionCompleted(e)
     -- end defeat
     if status == "AD_ACTION_CAPTOR_KNOCKOUT" then
         if Osi.IsInCombat(captor) == 0 then
-            TieAndRansack.CleanUpDefeat(defeatContext)
-            TieAndRansack.KickOutVictims(defeatContext.victims)
-        else
-            TieAndRansack.CleanUpDefeat(defeatContext)
+            if Osi.CanAllPartiesLongRest() == 1 and (math.random() <= 0.5) then
+                TieAndRansack.KickOutVictims(defeatContext.victims)
+            else
+                TieAndRansack.LetVictimsGo(defeatContext.victims)
+            end
         end
+        TieAndRansack.CleanUpDefeat(defeatContext)
     end
 end
 
@@ -50,10 +52,17 @@ function TieAndRansack.StartRansackScript(captors, victims)
     Osi.ApplyStatus(mainPerp, "AD_ACTION_CAPTOR_TIE", -1, 1, mainVictim)
 end
 
+function TieAndRansack.LetVictimsGo(victims)
+    for index, victim in ipairs(victims) do
+        Osi.ApplyStatus(victim, "AD_SPARED_TEMP", 36, 1)
+    end
+end
+
 function TieAndRansack.KickOutVictims(victims)
     for index, victim in ipairs(victims) do
         Utils.Fade(victim, 5.0)
         Osi.PROC_WaypointTeleportTo(victim, Waypoints[Utils.GetCurrentLevel()][1])
+        Osi.ApplyStatus(victim, "AD_DEFEATED_TEMP", 12, 1)
     end
 end
 

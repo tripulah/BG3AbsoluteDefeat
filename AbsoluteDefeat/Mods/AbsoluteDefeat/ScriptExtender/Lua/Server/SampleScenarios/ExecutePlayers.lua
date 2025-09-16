@@ -11,6 +11,7 @@ end)
 
 function StartExecuteScript(victims)
     for _,victim in pairs(victims) do
+        Osi.RemoveStatus(victim, "DOWNED")
         Osi.Die(victim)
     end
 end

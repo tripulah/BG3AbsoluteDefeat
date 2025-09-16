@@ -218,7 +218,6 @@ function InitDefeatOnParty(combatguid)
     Utils.PrintTable(alivePartyMembers)
     -- take party out of combat
     for _, alivePartyMember in ipairs(alivePartyMembers) do
-
         Osi.ApplyStatus(alivePartyMember, "AD_DEFEATED", -1)
     end
 end
@@ -284,10 +283,8 @@ function StartDefeatScenario(combatguid)
     local allies = {}
 
     for i, survivor in ipairs(survivors) do
-        if IsTargetAnEnemy(survivor) then
+        if IsTargetAnEnemy(survivor) and not IsPartyMember(survivor) then
             table.insert(enemies, survivor)
-            --Utils.TryAddSpell(survivor, "Target_AD_Restrain")
-            
         end
         if not IsPartyMember(survivor) then
             Osi.SetHitpointsPercentage(survivor, 100)
@@ -303,7 +300,6 @@ function StartDefeatScenario(combatguid)
     for i, survivor in ipairs(survivors) do
         if IsTargetAnAlly(survivor) and not IsPartyMember(survivor) then
             table.insert(allies, survivor)
-            --Utils.TryAddSpell(survivor, "Target_Help")
         end
     end
 
@@ -365,12 +361,10 @@ function StartDefeatScenario(combatguid)
         Utils.Debug("Neutrals are the victors.")
         Utils.PrintTable(neutrals)
         Utils.PrintTable(defeatedNotImprisonedParty)
-        if #enemies == 0 then
-            for i, victim in ipairs(defeatedNotImprisonedParty) do
-                Osi.RemoveStatus(victim, "AD_DEFEATED")
-                Osi.RemoveStatus(victim, "DOWNED")
-                Osi.ApplyStatus(victim, "AD_DEFEATED", 30, 1)
-            end
+        for i, victim in ipairs(defeatedNotImprisonedParty) do
+            Osi.RemoveStatus(victim, "AD_DEFEATED")
+            Osi.RemoveStatus(victim, "DOWNED")
+            Osi.ApplyStatus(victim, "AD_DEFEATED_TEMP", 30, 1)
         end
     end
     
@@ -379,6 +373,13 @@ function StartDefeatScenario(combatguid)
         Utils.PrintTable(allies)
         Utils.PrintTable(defeatedNotImprisonedParty)
         StartHelpAlliesScript(allies, defeatedNotImprisonedParty)
+    else
+        Utils.Debug("Party somehow got defeated and are the only ones alive.")
+        for i, victim in ipairs(defeatedNotImprisonedParty) do
+            Osi.RemoveStatus(victim, "AD_DEFEATED")
+            Osi.RemoveStatus(victim, "DOWNED")
+            Osi.ApplyStatus(victim, "AD_DEFEATED_TEMP", 30, 1)
+        end
     end
 end
 
@@ -493,7 +494,7 @@ function AD.StatusApplied(object, status, causee, storyActionID)
             local stealGear = Utils.UnequipGearSlot(object, stealList[math.random(#stealList)], true)
             if stealGear ~= nil then
                 Osi.ApplyStatus(object, "AD_ARMOR_STEAL", 0, 100, causee)
-                Osi.ApplyStatus(causee, "AD_ACTION_CAPTOR_LOOT_ITEM", 0, 100, stealGear)
+                Osi.ApplyStatus(causee, "AD_LOOT_ITEM", 0, 100, stealGear)
             end
             return
         end
@@ -526,7 +527,6 @@ function AD.StatusApplied(object, status, causee, storyActionID)
 end
 
 function AD.StatusRemoved(object, status, causee, storyActionID)
-
     if causee ~= nil then
         if Osi.GetTechnicalName(causee) ~= nil then
             causee = Osi.GetTechnicalName(causee) .. "_" .. causee
@@ -616,8 +616,7 @@ function AD.CmdSurrender()
     if #activeCombats > 0 then
         local partyMembers = DBUtils.GetActiveOriginCombatants(activeCombats[1])
         for i, partyMember in ipairs(partyMembers) do
-            Osi.SetHitpoints(partyMember, 1)
-            Osi.ApplyStatus(partyMember, "DOWNED", -1, 1)
+            Osi.ApplyDamage(partyMember, Osi.GetHitpoints(partyMember), "Radiant", "NULL_00000000-0000-0000-0000-000000000000")
         end
     end
 end
