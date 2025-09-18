@@ -14,12 +14,6 @@ function Api.ImportScenarios(payload)
 				end
 			end
 		end
-
-		if payload.CustomDownedStatusList then
-			for downedStatus in pairs(payload.CustomDownedStatusList) do
-				DownedStatuses[downedStatus] = true
-			end
-		end
 	end
 end
 

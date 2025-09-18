@@ -5,13 +5,8 @@ local function CreateAuthorConfigPayload(data, modGUID)
 	Utils.Debug("Entering CreateAuthorConfigPayload", 2)
 	local payload = {
 		ModGuid = modGUID,
-		CustomDownedStatusList = {},
 		Scenarios = {}
 	}
-
-	for _, customDownedStatus in ipairs(data.CustomDownedStatusList) do
-		payload.CustomDownedStatusList[customDownedStatus] = true
-	end
 
 	for _, scenario in pairs(data.Scenarios) do
 		payload.Scenarios[scenario.Id] = {

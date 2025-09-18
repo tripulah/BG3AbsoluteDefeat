@@ -425,7 +425,7 @@ function AD.CombatEnded(combat)
 end
 
 function AD.StatusApplied(object, status, causee, storyActionID)
-    if DownedStatuses[status] ~= nil then -- seems to be this runs before it is added to the defeat db...
+    if Osi.HasAppliedStatusOfType(object, "DOWNED") == 1 then -- seems to be this runs before it is added to the defeat db...
         local combatguid = Osi.CombatGetGuidFor(object)
         if combatguid ~= nil then
             Utils.Debug("ALLY COMBATANT DOWNED: Start defeat check for combat: "..combatguid)
@@ -461,10 +461,10 @@ function AD.StatusApplied(object, status, causee, storyActionID)
         return
     end
 
-    if string.sub(status, 1, 16) == "AD_ACTION_VICTIM" and causee ~= nil then
+    if string.sub(status, 1, 16) == "AD_ACTION_VICTIM" then
         local scenarioid = GetActiveDefeatScenarioIdFromObject(object)
         if not Utils.NilOrEmpty(scenarioid) then
-            Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionStarted:Throw({scenarioId = scenarioid, victim = object, captor = object, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
+            Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionStarted:Throw({scenarioId = scenarioid, victim = object, captor = causee, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
         end
         return
     end
@@ -548,7 +548,7 @@ function AD.StatusRemoved(object, status, causee, storyActionID)
     if string.sub(status, 1, 16) == "AD_ACTION_VICTIM" then
         local scenarioid = GetActiveDefeatScenarioIdFromObject(object)
         if not Utils.NilOrEmpty(scenarioid) then
-            Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionStarted:Throw({scenarioId = scenarioid, victim = object, captor = causee, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
+            Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionCompleted:Throw({scenarioId = scenarioid, victim = object, captor = causee, status = status, defeatContext = AD.GetDefeatContextFromObject(object)})
         end
     end
 end
