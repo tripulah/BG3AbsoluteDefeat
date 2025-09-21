@@ -1,4 +1,4 @@
 RequireFiles("Client/", {
-    "UI",
-    "UIHelpers"
+    "UIHelpers",
+    "UI"
 })

@@ -597,7 +597,9 @@ function AD.FleeFromCombat(participant, combatGuid)
 end
 
 function AD.Died(object)
-    Osi.PROC_GameOver_CheckGameOver();
+    if IsPartyMember(object) then
+        Osi.PROC_GameOver_CheckGameOver()
+    end
 end
 
 function AD.Stabilized(object)
