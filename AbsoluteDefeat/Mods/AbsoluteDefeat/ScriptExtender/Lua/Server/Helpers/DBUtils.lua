@@ -4,7 +4,13 @@ DBUtils = {
 
 function DBUtils.GetPartyMembers()
     local partyMembers = DBUtils.ConvertDBTable(Osi.DB_PartyMembers:Get(nil))
-    return partyMembers
+    local notEnemyPartyMembers = {}
+    for _,partyMember in ipairs(partyMembers) do
+        if Osi.HasActiveStatusWithGroup(partyMember, "SG_Possessed") ~= 1 then
+            table.insert(notEnemyPartyMembers, partyMember)
+        end
+    end
+    return notEnemyPartyMembers
 end
 
 function DBUtils.GetOriginPartyMembers()
@@ -35,7 +41,9 @@ function DBUtils.GetPreviousPartyCombats()
     local combats = {}
     for index, partymember in ipairs(partymembers) do
         local prevcombat = DBUtils.GetPreviousCombatFromEntity(partymember)
-        if prevcombat ~= nil then
+        if prevcombat ~= nil and next(combats) == nil then
+            table.insert(combats, prevcombat)
+        elseif prevcombat ~= nil and prevcombat ~= combats[1] then
             table.insert(combats, prevcombat)
         end
     end
