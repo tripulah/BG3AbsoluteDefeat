@@ -1,6 +1,5 @@
 RequireFiles("Server/SampleScenarios/", {
-    "TieAndRansack",
     "ExecutePlayers",
-    "SpareVictims",
+    "DefaultScenario",
     "ModEvents",
   })

@@ -15,6 +15,7 @@ local function CreateAuthorConfigPayload(data, modGUID)
 			NameHandle = scenario.NameHandle,
 			Tag = scenario.Tag,
 			Weight = scenario.Weight,
+			TimeOut = scenario.TimeOut,
 			Situational = scenario.Situational,
 		}
 	end
@@ -128,36 +129,72 @@ function UpdateConfigWeight(ModGUID, ScenarioId, Weight)
     Utils.Debug("Updated Weight for " .. ScenarioId .. " to " .. Weight)
 end
 
+function CreatePlayerConfig(playerFilePath, authorFilePath)
+	local authorContent = Ext.IO.LoadFile(authorFilePath, "data")
+	if authorContent ~= nil then
+		local authorConfig = Ext.Json.Parse(authorContent)
+		if not authorConfig or not authorConfig.Scenarios then
+			Utils.Error("Invalid config structure in " .. authorFilePath)
+			return
+		end
+
+		local playerConfig = {
+			FileVersion = authorConfig.FileVersion,
+			ModGuid = ModuleUUID,
+			Scenarios = {}
+		}
+
+		for _, scenario in pairs(authorConfig.Scenarios) do
+			playerConfig.Scenarios[scenario.Id] = { Weight = scenario.Weight }
+		end
+
+		-- encode to JSON
+		SaveJSONFile(playerFilePath, playerConfig)
+	else
+		Utils.Error("Could not find config file at: " .. authorFilePath)
+	end
+end
+
+
+function TryLoadPlayerConfigForMod(modGuid)
+	local modData = Ext.Mod.GetMod(modGuid)
+	local filePath = playerConfigFilePathPattern:format(modData.Info.Directory)
+	local jsonContent = Ext.IO.LoadFile(filePath)
+	local config = Ext.Json.Parse(jsonContent)
+	
+    if not config or not config.Scenarios then
+        Utils.Error("Invalid config structure in " .. filePath)
+        return
+    end
+	return config
+end
+
 function RestorePlayerConfig()
+
 	local modData = Ext.Mod.GetMod(ModuleUUID)
+
 	local playerFilePath = playerConfigFilePathPattern:format(modData.Info.Directory)
 	local authorFilePath = authorConfigFilePathPattern:format(modData.Info.Directory)
 	local config = Ext.IO.LoadFile(playerFilePath)
+
 	if config == nil then
 		Utils.Warn("Could not find config file at: " .. playerFilePath .. " creating one.")
-		local authorContent = Ext.IO.LoadFile(authorFilePath, "data")
-		if authorContent ~= nil then
-			local authorConfig = Ext.Json.Parse(authorContent)
-			if not authorConfig or not authorConfig.Scenarios then
-				Utils.Error("Invalid config structure in " .. authorFilePath)
-				return
-			end
+		CreatePlayerConfig(playerFilePath, authorFilePath)
+		return
+	end
 
-			local playerConfig = {
-				FileVersion = 1,
-				ModGuid = ModuleUUID,
-				Scenarios = {}
-			}
+	local content = Ext.Json.Parse(config)
+	if not content or not content.Scenarios then
+		Utils.Warn("Invalid Playerconfig, re-creating it at: " .. playerFilePath)
+		CreatePlayerConfig(playerFilePath, authorFilePath)
+		return
+	end
 
-			for _, scenario in pairs(authorConfig.Scenarios) do
-				playerConfig.Scenarios[scenario.Id] = { Weight = scenario.Weight }
-			end
-
-			-- encode to JSON
-			SaveJSONFile(playerFilePath, playerConfig)
-		else
-			Utils.Error("Could not find config file at: " .. authorFilePath)
-		end
+	local authorContent = Ext.IO.LoadFile(authorFilePath, "data")
+	local authorConfig = Ext.Json.Parse(authorContent)
+	if authorConfig.FileVersion ~= content.FileVersion then
+		Utils.Warn("FileVersion change detected, re-creating player config at: " .. playerFilePath)
+		CreatePlayerConfig(playerFilePath, authorFilePath)
 	end
 end
 

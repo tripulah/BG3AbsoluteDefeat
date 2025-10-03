@@ -187,86 +187,6 @@ function Utils.GetTableUnion(t1, t2)
     return result
 end
 
--- Function to deep iterate through the inventory and store items in a table, with depth limit
-function Utils.DeepIterateInventory(container, itemList, depth)
-    -- Initialize itemList and depth if they are not provided
-    itemList = itemList or {}
-    depth = depth or 0
-
-    -- Check if the depth limit is reached
-    if depth > 4 then
-        return itemList
-    end
-
-    local entity = Ext.Entity.Get(container)
-    if not entity or not entity.InventoryOwner then
-        return itemList
-    end
-
-    local primaryInventory = entity.InventoryOwner.PrimaryInventory
-    if not primaryInventory or not primaryInventory.InventoryContainer then
-        return itemList
-    end
-
-    for _, item in pairs(primaryInventory.InventoryContainer.Items) do
-        local uuid = item.Item.Uuid.EntityUuid
-        local _, totalAmount = Osi.GetStackAmount(uuid)
-        local root = string.sub(Osi.GetTemplate(uuid), -36)
-        local itemEntity = Ext.Entity.Get(uuid)
-        local rarity = itemEntity and itemEntity.Value and itemEntity.Value.Rarity or 0
-        local isStoryItem = itemEntity and itemEntity.ServerItem and itemEntity.ServerItem.StoryItem and 1 or 0
-        local name = itemEntity and itemEntity.ServerItem and itemEntity.ServerItem.Stats
-        local isContainer = Osi.IsContainer(uuid)
-        
-        -- Create a list of key info pairs for the item
-        local itemInfo = {
-            Owner = container,
-			Object = name,
-            Uuid = uuid,
-            Amount = totalAmount,
-            Root = root,
-            Rarity = rarity,
-            IsStoryItem = isStoryItem,
-            IsContainer = isContainer
-        }
-
-        -- Add the item info to the itemList table
-        table.insert(itemList, itemInfo)
-
-        -- If the item is a container, call the function recursively with incremented depth
-        if isContainer == 1 then
-            Utils.DeepIterateInventory(uuid, itemList, depth + 1)
-        end
-    end
-
-    -- Return the table with all items
-    return itemList
-end
-
-function Utils.GetEquippedGearSlots(character)
-    local slots = {"Helmet", "Gloves", "Boots", "Cloak", "Breast", "Ring", "Amulet", "Ring", "Ring2"}
-    local equippedGearSlots = {}
-    for i = 1, #slots do
-        local gearPiece = Osi.GetEquippedItem(character, slots[i]);
-        if gearPiece ~= nil then
-            table.insert(equippedGearSlots, slots[i])
-        end
-    end
-    return equippedGearSlots
-end
-
-function Utils.UnequipGearSlot(character, slot, forceUnlock)
-    local gearPiece = Osi.GetEquippedItem(character, slot);
-    if gearPiece ~= nil then
-        if forceUnlock then
-            Osi.LockUnequip(gearPiece, 0)
-        end
-        Osi.Unequip(character, gearPiece)
-    end
-
-    return gearPiece
-end
-
 -- Add spell if actor doesn't have it yet
 function Utils.TryAddSpell(actor, spellName)
     if  Osi.HasSpell(actor, spellName) == 0 then
@@ -282,31 +202,12 @@ function Utils.TryRemoveSpell(actor, spellName)
     end
 end
 
--- Cancels a screen fadeout
----@param entity    string  - The affected entities UUID
-local function clearFade(entity)
-    Osi.ClearScreenFade(entity, 0.1, "ScreenFade", 0)
-end
-
 function Utils.IsPlayable(uuid)
     return Osi.IsTagged(uuid, "PLAYABLE_25bf5042-5bf6-4360-8df8-ab107ccb0d37") == 1
 end
 
 function Utils.GetCurrentLevel()
     return Osi.DB_CurrentLevel:Get(nil)[1][1]
-end
-
--- Fades the screen black (e.g. during Setup of a Scene)
----@param entity    string  - The affected entities UUID
----@param duration  number    - The time the fade is active
-function Utils.Fade(entity, duration)
-    if not duration then duration = 3.0 end
-    if Utils.IsPlayable(entity) then
-        Osi.ScreenFadeTo(entity, 0.1, 0.1, "ScreenFade")
-        Ext.Timer.WaitFor(duration, function()
-            clearFade(entity)
-        end)
-    end
 end
 
 return Utils
