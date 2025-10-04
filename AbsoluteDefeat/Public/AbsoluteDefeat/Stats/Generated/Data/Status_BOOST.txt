@@ -100,7 +100,7 @@ new entry "AD_EXPIRE_DEFEAT_TIMER"
 type "StatusData"
 data "StatusType" "BOOST"
 data "StackId" "DEFEAT_EXPIRE_TIMER"
-//data "StatusPropertyFlags" "DisableCombatlog;DisableCombatlog;DisablePortraitIndicator;"
+data "StatusPropertyFlags" "DisableCombatlog;DisableCombatlog;DisablePortraitIndicator;"
 data "OnRemoveFunctors" "IF(RemoveCause(StatusRemoveCause.TimeOut)):ApplyStatus(AD_END_DEFEAT, 100, 0);"
 
 new entry "AD_END_DEFEAT"
