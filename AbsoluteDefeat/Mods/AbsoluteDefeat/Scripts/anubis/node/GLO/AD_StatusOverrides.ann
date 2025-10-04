@@ -10,11 +10,11 @@ game.actions.statusOverrides.AD_ACTION_ALLY_ASSIST = Action
             end
 
             SteerTo(source)
-        elseif (source ~= nil and not source.IsDead and HasActiveStatus(source, "AD_DEFEATED")) then
+        elseif (source ~= nil and not source.IsDead and HasActiveStatus(source, "AD_DEFEATED") or HasActiveStatus(source, "AD_DEFEATED_TEMP")) then
             SteerTo(source)
             -- assist dialog
             --StartAutomatedDialog(ad, false, me)
-            UseSpell("Target_Help", source, nil, nil, nil, true, true, false, false, true)
+            UseSpell("Target_Help", source, nil, nil, nil, true, true, true)
             Sleep(3)
             RemoveStatus(me, "AD_ACTION_ALLY_ASSIST", source)
         elseif (source.IsDead) then

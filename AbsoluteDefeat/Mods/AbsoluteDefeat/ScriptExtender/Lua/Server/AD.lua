@@ -40,6 +40,10 @@ function GetActiveDefeatScenarioIdFromCombat(combatguid)
 end
 
 function GetActiveDefeatScenarioIdFromObject(object)
+    if object == nil then
+        return ""
+    end
+
     local scenarioId = Osi.GetVarFixedString(object, AD.ActiveScenario)
 
     if not Utils.NilOrEmpty(scenarioId) and (not Utils.NilOrEmpty(AD.Scenarios[scenarioId]) or not Utils.NilOrEmpty(AD.SituationalScenarios[scenarioId])) then
@@ -275,6 +279,7 @@ end
 
 function AD.CleanUpDefeat(combatguid)
     Utils.Debug("DEFEAT CLEANUP STARTED FOR COMBAT: " .. combatguid)
+    local dc = AD.GetDefeatContextFromCombatGuid(combatguid)
     local participated = DBUtils.GetCombatants(combatguid)
     for _, participant in pairs(participated) do
         ClearActiveDefeatScenariosByObject(participant)
@@ -295,6 +300,7 @@ function AD.CleanUpDefeat(combatguid)
             end
         end
     end
+    Ext.ModEvents.AbsoluteDefeat.DefeatScenarioCompleted:Throw(dc)
 end
 
 function AD.OverrideDefeatScenarioForCombat(combatguid, overrideScenarioId)
@@ -447,7 +453,7 @@ function AD.CombatStarted(combat)
         ClearActiveDefeatScenariosByObject(participant)
         Osi.RemoveStatus(participant, "AD_DEFEATED_STATE")
 
-        Utils.Warn("CLEANING UP : " .. participant)
+        --Utils.Warn("CLEANING UP : " .. participant)
         local entity = Ext.Entity.Get(participant)
         if entity ~= nil then
             local charStatusData = entity.ServerCharacter.StatusManager.Statuses
@@ -504,7 +510,7 @@ function AD.StatusApplied(object, status, causee, storyActionID)
     end
     
     if status == "AD_DEFEATED" then
-        Osi.SetHitpoints(object, 1)
+        Osi.SetHitpoints(object, 0)
         return
     end
 
@@ -513,7 +519,7 @@ function AD.StatusApplied(object, status, causee, storyActionID)
         if not Utils.NilOrEmpty(scenarioid) then
             Utils.Warn("A defeat scenario timed out [" .. scenarioid .. "] force-ending the defeat scenario...")
             local dc = AD.GetDefeatContextFromObject(object)
-            Ext.ModEvents.AbsoluteDefeat.DefeatScenarioForciblyEnded:Throw(dc)
+            Ext.ModEvents.AbsoluteDefeat.DefeatScenarioRequestEnd:Throw(dc)
         end
     end
 
@@ -573,7 +579,6 @@ function AD.StatusRemoved(object, status, causee, storyActionID)
 end
 
 function AD.ExpireDefeatStateInTime(char, time)
-    _P("EXPIRING DEFEAT")
     Osi.RemoveStatus(char, "AD_DEFEATED")
     Osi.RemoveStatus(char, "AD_DEFEATED_STATE")
     Osi.ApplyStatus(char, "AD_DEFEATED_TEMP", time, 100)
@@ -670,9 +675,10 @@ end
 function AD.CmdSurrender()
     local activeCombats = DBUtils.GetActivePartyCombats()
     if #activeCombats > 0 then
-        local partyMembers = DBUtils.GetActiveOriginCombatants(activeCombats[1])
+        local partyMembers = DBUtils.GetActivePartyCombatants(activeCombats[1])
         for i, partyMember in ipairs(partyMembers) do
-            Osi.ApplyDamage(partyMember, Osi.GetHitpoints(partyMember), "Radiant", "NULL_00000000-0000-0000-0000-000000000000")
+            --Osi.ApplyDamage(partyMember, Osi.GetHitpoints(partyMember), "Radiant", "NULL_00000000-0000-0000-0000-000000000000")
+            Osi.SetHitpoints(partyMember, 0)
         end
     end
 end
@@ -682,7 +688,7 @@ function AD.CmdUndefeat()
 end
 
 function AD.CmdDebug()
-    Utils.Warn("VIEWING DEFEAT CONTEXT:")
+    Utils.Debug("DEFEAT CONTEXT:")
 
     local lastcombat = DBUtils.GetPreviousCombatFromEntity(Osi.GetHostCharacter())
     local dc = AD.GetDefeatContextFromCombatGuid(lastcombat)
@@ -717,7 +723,7 @@ function AD.CmdForceEndScenario()
     -- Utils.PrintTable(combats)
     for _,combat in pairs(combats) do
         local defeatContext = AD.GetDefeatContextFromCombatGuid(combat)
-        Ext.ModEvents.AbsoluteDefeat.DefeatScenarioForciblyEnded:Throw(defeatContext)
+        Ext.ModEvents.AbsoluteDefeat.DefeatScenarioRequestEnd:Throw(defeatContext)
     end
 end
 
