@@ -39,13 +39,17 @@ Ext.ModEvents.AbsoluteDefeat.DefeatScenarioActionCompleted:Subscribe(function (e
     end
 end)
 
-Ext.ModEvents.AbsoluteDefeat.DefeatScenarioForciblyEnded:Subscribe(function (e)
-    _P("[AbsoluteDefeat][Events] DefeatScenarioForciblyEnded")
+Ext.ModEvents.AbsoluteDefeat.DefeatScenarioRequestEnd:Subscribe(function (e)
+    Utils.Debug("[AbsoluteDefeat][Events] DefeatScenarioRequestEnd")
     if handlers[e.scenarioId] ~= nil then
-        handlers[e.scenarioId].DefeatScenarioForciblyEnded(e)
+        handlers[e.scenarioId].DefeatScenarioRequestEnd(e)
     end
 
     if Utils.NilOrEmpty(e.scenarioId) then
         AD.CleanUpDefeat(e.combatGuid)
     end
+end)
+
+Ext.ModEvents.AbsoluteDefeat.DefeatScenarioCompleted:Subscribe(function (e)
+    Utils.Debug("[AbsoluteDefeat][Events] DefeatScenarioCompleted")
 end)
