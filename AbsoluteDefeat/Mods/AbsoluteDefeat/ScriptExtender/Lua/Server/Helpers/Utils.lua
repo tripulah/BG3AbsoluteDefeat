@@ -187,6 +187,20 @@ function Utils.GetTableUnion(t1, t2)
     return result
 end
 
+function Utils.Unique(t)
+    local seen = {}
+    local result = {}
+
+    for _, value in ipairs(t) do
+        if not seen[value] then
+            seen[value] = true
+            table.insert(result, value)
+        end
+    end
+
+    return result
+end
+
 -- Add spell if actor doesn't have it yet
 function Utils.TryAddSpell(actor, spellName)
     if  Osi.HasSpell(actor, spellName) == 0 then
@@ -208,6 +222,22 @@ end
 
 function Utils.GetCurrentLevel()
     return Osi.DB_CurrentLevel:Get(nil)[1][1]
+end
+
+function Utils.GetFullGuid(uuid)
+    local entity = Ext.Entity.Get(uuid)
+    if entity ~= nil then
+        local prefix = entity.ServerCharacter.OriginalTemplate.Name
+        local full = string.format("%s_%s", prefix, uuid)
+        return full
+    end
+    return nil
+end
+
+---@param uuid string
+---@return boolean
+function Utils.IsFactionOverriden(uuid)
+    return Osi.HasActiveStatusWithGroup(uuid, 'SG_Possessed') == 1 or Osi.HasActiveStatusWithGroup(uuid, 'SG_Dominated') == 1 or Osi.HasActiveStatusWithGroup(uuid, 'SG_Mad') == 1
 end
 
 return Utils

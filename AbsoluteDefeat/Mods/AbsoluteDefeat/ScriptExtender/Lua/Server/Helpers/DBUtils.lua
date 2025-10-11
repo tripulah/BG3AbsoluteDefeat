@@ -4,17 +4,31 @@ DBUtils = {
 
 function DBUtils.GetPartyMembers()
     local partyMembers = DBUtils.ConvertDBTable(Osi.DB_PartyMembers:Get(nil))
+    return partyMembers
+end
+
+function DBUtils.GetPartyMembersNotPossessed()
+    Utils.Debug("[GetPartyMembersNotPossessed]", 2)
+    local partyMembers = DBUtils.ConvertDBTable(Osi.DB_PartyMembers:Get(nil))
     local notEnemyPartyMembers = {}
     for _,partyMember in ipairs(partyMembers) do
-        if Osi.HasActiveStatusWithGroup(partyMember, "SG_Possessed") ~= 1 then
+        if not Utils.IsFactionOverriden(partyMember) then
             table.insert(notEnemyPartyMembers, partyMember)
         end
     end
+    Utils.Debug("[/GetPartyMembersNotPossessed]", 2)
     return notEnemyPartyMembers
 end
 
 function DBUtils.GetOriginPartyMembers()
     local partyMembers = DBUtils.GetPartyMembers()
+    local summons = DBUtils.ConvertDBTable(Osi.DB_PlayerSummons:Get(nil))
+    local onlyOrigins = Utils.GetTableDifference(partyMembers, summons)
+    return onlyOrigins
+end
+
+function DBUtils.GetOriginPartyMembersNotPossessed()
+    local partyMembers = DBUtils.GetPartyMembersNotPossessed()
     local summons = DBUtils.ConvertDBTable(Osi.DB_PlayerSummons:Get(nil))
     local onlyOrigins = Utils.GetTableDifference(partyMembers, summons)
     return onlyOrigins
@@ -26,6 +40,8 @@ function DBUtils.GetPartySize()
 end 
 
 function DBUtils.GetActivePartyCombats()
+    Utils.Debug("[GetActivePartyCombats]", 2)
+
     local partyMembers = DBUtils.GetPartyMembers()
     local activeCombats = {}
     for i, member in ipairs(partyMembers) do
@@ -33,6 +49,9 @@ function DBUtils.GetActivePartyCombats()
             table.insert(activeCombats, Osi.CombatGetGuidFor(member))
         end
     end
+    activeCombats = Utils.Unique(activeCombats)
+    Utils.PrintTable(activeCombats)
+    Utils.Debug("[/GetActivePartyCombats]", 2)
     return activeCombats
 end
 
@@ -77,7 +96,7 @@ function DBUtils.GetActiveEnemyCombatants(combatGuid)
     local combatants = DBUtils.GetActiveCombatants(combatGuid)
     local enemies = {}
     for index, combatant in ipairs(combatants) do
-        if IsTargetAnEnemy(combatant) then
+        if IsTargetAnEnemy(combatant) or (Utils.IsFactionOverriden(combatant) and IsPartyMember(combatant)) then
             table.insert(enemies, combatant)
         end
     end
@@ -88,37 +107,42 @@ function DBUtils.GetEnemyCombatants(combatGuid)
     local combatants = DBUtils.GetCombatants(combatGuid)
     local enemies = {}
     for index, combatant in ipairs(combatants) do
-        if IsTargetAnEnemy(combatant) then
+        if IsTargetAnEnemy(combatant) or (Utils.IsFactionOverriden(combatant) and IsPartyMember(combatant)) then
             table.insert(enemies, combatant)
         end
     end
     return enemies
 end
 
+-- does not include possessed players
 function DBUtils.GetActiveOriginCombatants(combatGuid)
     local combatants = DBUtils.GetActiveCombatants(combatGuid)
-    local partymembers = DBUtils.GetOriginPartyMembers()
+    local partymembers = DBUtils.GetOriginPartyMembersNotPossessed()
     local combatpartymembers = Utils.GetTableIntersection(combatants, partymembers)
     return combatpartymembers
 end
 
+-- does not include possessed allies 
 function DBUtils.GetActivePartyCombatants(combatGuid)
     local combatants = DBUtils.GetActiveCombatants(combatGuid)
-    local partymembers = DBUtils.GetPartyMembers()
+    local partymembers = DBUtils.GetPartyMembersNotPossessed()
     local combatpartymembers = Utils.GetTableIntersection(combatants, partymembers)
+    Utils.Debug("[GetactivePartyCombatants]", 2)
+    Utils.PrintTable(combatpartymembers)
+    Utils.Debug("[/GetactivePartyCombatants]", 2)
     return combatpartymembers
 end
 
 function DBUtils.GetPartyCombatants(combatGuid)
     local combatants = DBUtils.GetCombatants(combatGuid)
-    local partymembers = DBUtils.GetPartyMembers()
+    local partymembers = DBUtils.GetPartyMembersNotPossessed()
     local combatpartymembers = Utils.GetTableIntersection(combatants, partymembers)
     return combatpartymembers
 end
 
 function DBUtils.GetOriginCombatants(combatGuid)
     local combatants = DBUtils.GetCombatants(combatGuid)
-    local partymembers = DBUtils.GetOriginPartyMembers()
+    local partymembers = DBUtils.GetOriginPartyMembersNotPossessed()
     local combatpartymembers = Utils.GetTableIntersection(combatants, partymembers)
     return combatpartymembers
 end
@@ -154,7 +178,6 @@ end
 
 -- party that has the AD_DEFEAT status
 function DBUtils.GetPartyInADDefeatStatus(combatGuid)
-    Utils.Debug("Absolute defeated: before")
     local partyMembers = DBUtils.GetPartyCombatants(combatGuid)
     local defeatedPartyMembers = {}
     for _, partyMember in ipairs(partyMembers) do
@@ -162,8 +185,6 @@ function DBUtils.GetPartyInADDefeatStatus(combatGuid)
             table.insert(defeatedPartyMembers, partyMember)
         end
     end
-    Utils.Debug("Absolute defeated: after")
-    Utils.PrintTable(defeatedPartyMembers)
     return defeatedPartyMembers
 end
 

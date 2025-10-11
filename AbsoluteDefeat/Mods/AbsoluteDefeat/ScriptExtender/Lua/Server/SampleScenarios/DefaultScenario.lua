@@ -7,7 +7,7 @@ function DefaultScenario.DefeatScenarioStarted(e)
     local endGameflag = true
     for _,v in pairs(victims) do
         if (Osi.DB_InDangerZone:Get(v,nil)[1] == nil) then
-            Osi.QRY_CombatFlee_TryFleeToWaypoint(v)
+            Osi.QRY_CombatFlee_TryFleeToCamp(v)
             endGameflag = false
             Osi.ApplyStatus(v, "AD_DEFEATED_TEMP", 30, 1)
         end

@@ -1,0 +1,16 @@
+Version 1
+SubGoalCombiner SGC_AND
+INITSECTION
+
+KBSECTION
+
+QRY
+QRY_WaypointTeleport_PlayerBlocked_UserException((CHARACTER)_Player)
+AND
+HasActiveStatus(_Player, "AD_DEFEATED_STATE", 1)
+THEN
+DB_NOOP(1);
+
+EXITSECTION
+
+ENDEXITSECTION

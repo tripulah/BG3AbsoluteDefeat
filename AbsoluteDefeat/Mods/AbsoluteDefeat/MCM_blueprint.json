@@ -17,14 +17,92 @@
                     "Settings": [
                         {
                             "Id": "include_summons",
-                            "Name": "Include summons",
+                            "Name": "Include Summons",
                             "Type": "checkbox",
-                            "Default": true,
+                            "Default": false,
                             "Description": "Allow summons to continue fighting when the player characters are downed.",
                             "Tooltip": "Allow summons to continue fighting when the player characters are downed",
                             "Handles": {
                                 "DescriptionHandle": "hd4f19cb4g390fg4f80gb21cga3dc03e4e771",
                                 "NameHandle": "he190e517g9792g48adga932g4202d1f6c397"
+                            }
+                        },
+                        {
+                            "Id": "downed_protection",
+                            "Name": "Downed Player Protection",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "Enemies will be less likely to kill off downed players.",
+                            "Tooltip": "Adds a hidden buff to players receiving the downed status preventing enemies from attacking them for 1 turn",
+                            "Handles": {
+                                "DescriptionHandle": "hb15c6b0fg13e4g4f1fgb3b8gf7b6a7f35bbe",
+                                "NameHandle": "h458b5e96g4b67g49bfg95dcg59b1bd69dafb"
+                            }
+                        },
+                        {
+                            "Id": "btn_surrender",
+                            "Name": "Surrender",
+                            "Type": "event_button",
+                            "Description": "Surrender and immediately end the combat encounter.",
+                            "Options": {
+                                "ConfirmDialog": {
+                                    "Title": "Confirm Action",
+                                    "Message": "Are you sure you want to perform this action?",
+                                    "ConfirmText": "Yes, do it",
+                                    "CancelText": "No, cancel"
+                                },
+                                "Cooldown": 5,
+                                "Icon": {
+                                    "Name": "Status_Frightened"
+                                },
+                                "Label": "Surrender Button"
+                            },
+                            "Tooltip": "Surrender and immediately end the combat encounter.",
+                            "Handles": {
+                                "NameHandle": "h62393401gf798g4069ga76egfc0971cb62e5",
+                                "DescriptionHandle": "he416ef5eg1ca0g4971gac94gbfbaec0dd044",
+                                "EventButtonHandles": {
+                                    "ConfirmDialogHandles": {
+                                        "TitleHandle": "h74fd0317g376eg4fefgb8f3ga0847aac8b46",
+                                        "MessageHandle": "h763c6d76g96b7g4eacg9ad8ga78b989b1a47",
+                                        "ConfirmTextHandle": "hcd5f3395g1d43g434dga50bg9d5d9e571615",
+                                        "CancelTextHandle": "h2b23d9f8g86acg4f31g8dabg5fd03cbb636c"
+                                    },
+                                    "LabelHandle": "h4255a228g5ee7g40d4g9471g6846cd459a6b"
+                                }
+                            }
+                        },
+                        {
+                            "Id": "btn_softlockfix",
+                            "Name": "Emergency Stop",
+                            "Type": "event_button",
+                            "Description": "Immediately end a defeat scenario, use if stuck (might cause unexpected behaviour depending on the scenario).",
+                            "Options": {
+                                "ConfirmDialog": {
+                                    "Title": "Confirm Action",
+                                    "Message": "Are you sure you want to perform this action?",
+                                    "ConfirmText": "Yes, do it",
+                                    "CancelText": "No, cancel"
+                                },
+                                "Cooldown": 5,
+                                "Icon": {
+                                    "Name": "Spell_Transmutation_Knock"
+                                },
+                                "Label": "Fix Button"
+                            },
+                            "Tooltip": "Click if you're stuck in a defeat scenario.",
+                            "Handles": {
+                                "NameHandle": "he312eedega3f8g465dg80c3g61144fa322ab",
+                                "DescriptionHandle": "h23f7bedbge865g43fcg997fg149a69c918b8",
+                                "EventButtonHandles": {
+                                    "ConfirmDialogHandles": {
+                                        "TitleHandle": "hb0086ca9gfcffg4c1fgab76gfcca978e4bd4",
+                                        "MessageHandle": "h48364564g9ef9g4c9bgaaf8g041198833f87",
+                                        "ConfirmTextHandle": "h5686ebe5gba87g4721g945cgd22de385fe1e",
+                                        "CancelTextHandle": "h91674bf7g9e24g476bgabd4ga4d5a84a5d85"
+                                    },
+                                    "LabelHandle": "h59fa39b0g0fe1g40a6gabbagf2d60ffe7d50"
+                                }
                             }
                         },
                         {

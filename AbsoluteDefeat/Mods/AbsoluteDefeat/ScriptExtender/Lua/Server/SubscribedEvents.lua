@@ -50,6 +50,9 @@ function SubscribedEvents.SubscribeToEvents()
             LoadConfigFiles()
         end
     end)
+
+    Ext.RegisterNetListener("AD_AttemptSoftlockFix", conditionalWrapper(AD.SoftLockFix))
+    Ext.RegisterNetListener("AD_Surrender", conditionalWrapper(AD.CmdSurrender))
 end
 
 return SubscribedEvents

@@ -1,4 +1,5 @@
 RequireFiles("Server/Data/", {
     "Waypoints",
-    "AllowedRaces"
+    "AllowedRaces",
+    "Reasons"
   })

@@ -139,7 +139,7 @@ function IsInPrison(playerguid)
 end
 
 function IsPartyInCombat()
-    local partyMembers = DBUtils.GetPartyMembers()
+    local partyMembers = DBUtils.GetPartyMembersNotPossessed()
     for i, member in ipairs(partyMembers) do
         if Osi.CombatGetGuidFor(member) ~= nil then
             return true
@@ -149,7 +149,7 @@ function IsPartyInCombat()
 end
 
 function IsTargetAnEnemy(guid)
-    local partyMembers = DBUtils.GetPartyMembers()
+    local partyMembers = DBUtils.GetPartyMembersNotPossessed()
     for _, partyMemberGuid in ipairs(partyMembers) do
         if Osi.IsEnemy(guid, partyMemberGuid) == 1 then
             --Utils.Debug("IS ENEMY " .. partyMemberGuid .. " " .. guid)
@@ -160,7 +160,7 @@ function IsTargetAnEnemy(guid)
 end
 
 function IsTargetANeutral(guid)
-    local partyMembers = DBUtils.GetPartyMembers()
+    local partyMembers = DBUtils.GetPartyMembersNotPossessed()
     for _, partyMemberGuid in ipairs(partyMembers) do
         if Osi.IsNeutral(guid, partyMemberGuid) == 1 then
             --Utils.Debug("IS NEUTRAL " .. partyMemberGuid .. " " .. guid)
@@ -171,7 +171,7 @@ function IsTargetANeutral(guid)
 end
 
 function IsTargetAnAlly(guid)
-    local partyMembers = DBUtils.GetPartyMembers()
+    local partyMembers = DBUtils.GetPartyMembersNotPossessed()
     for _, partyMemberGuid in ipairs(partyMembers) do
         if Osi.IsAlly(guid, partyMemberGuid) == 1 then
             --Utils.Debug("IS ALLY " .. partyMemberGuid .. " " .. guid)
@@ -191,6 +191,10 @@ function IsPartyMember(guid)
         end
     end
     return false
+end
+
+function IsEnemyPartyMember(guid)
+    return IsPartyMember(guid) and Utils.IsFactionOverriden(guid)
 end
 
 function CheckIfExcluded(guid)
@@ -336,14 +340,14 @@ function StartDefeatScenario(combatguid)
     local allies = {}
 
     for i, survivor in ipairs(survivors) do
-        if IsTargetAnEnemy(survivor) and not IsPartyMember(survivor) then
+        if IsTargetAnEnemy(survivor) or IsEnemyPartyMember(survivor) then
             table.insert(enemies, survivor)
         end
-        if not IsPartyMember(survivor) then
+        if not IsPartyMember(survivor) or IsEnemyPartyMember(survivor) then
             Osi.SetHitpointsPercentage(survivor, 100)
         end
     end
-
+    
     for i, survivor in ipairs(survivors) do
         if IsTargetANeutral(survivor) then
             table.insert(neutrals, survivor)
@@ -364,6 +368,9 @@ function StartDefeatScenario(combatguid)
         return
     end
 
+    Utils.Debug("=== DEFEAT SETUP ===")
+    Utils.PrintTable({ enemies = enemies, victims = defeatedNotImprisonedParty, allies = allies, neutrals = neutrals })
+
     -- unsupported levels get the gameover check scenario
     if Waypoints[Utils.GetCurrentLevel()] == nil and Utils.NilOrEmpty(overrideScenarioId) then
         Utils.Debug("LEVEL " .. Utils.GetCurrentLevel() .. " IS NOT SUPPORTED, USING GAMEOVER CHECK INSTEAD.")
@@ -372,8 +379,6 @@ function StartDefeatScenario(combatguid)
 
     if #enemies > 0 then
         Utils.Debug("Enemies are the victors.")
-        Utils.PrintTable(enemies)
-        Utils.PrintTable(defeatedNotImprisonedParty)
         -- If ActiveScenario already exists in this combat, chose it instead of a random one
         if not Utils.NilOrEmpty(overrideScenarioId) then
             Utils.Debug("Existing Defeat Scenario [ " .. overrideScenarioId .. " ] has been set for combat " .. combatguid .. " skipping random select.")
@@ -409,20 +414,17 @@ function StartDefeatScenario(combatguid)
                 Utils.Warn("No Scenario was selected - using default scenario.")
                 Ext.ModEvents.AbsoluteDefeat.DefeatScenarioStarted:Throw({combatGuid = combatguid, captors = nil, victims = defeatedNotImprisonedParty, scenarioId = "DefaultScenario"})
             end
-
         else
             Utils.Warn("All enemies are non-humanoid - using default scenario.")
             Ext.ModEvents.AbsoluteDefeat.DefeatScenarioStarted:Throw({combatGuid = combatguid, captors = nil, victims = defeatedNotImprisonedParty, scenarioId = "DefaultScenario"})
         end
         return
-
-    elseif #neutrals > 0 then
+    end
+    
+    if #neutrals > 0 then
         Utils.Debug("Neutrals are the victors.")
         Utils.PrintTable(neutrals)
         Utils.PrintTable(defeatedNotImprisonedParty)
-        for i, victim in ipairs(defeatedNotImprisonedParty) do
-            AD.ExpireDefeatStateInTime(victim, 30)
-        end
     end
     
     if #allies > 0 then
@@ -432,8 +434,10 @@ function StartDefeatScenario(combatguid)
         StartHelpAlliesScript(allies, defeatedNotImprisonedParty)
     end
 
+    Utils.Debug("EXPIRING DEFEAT")
     for i, victim in ipairs(defeatedNotImprisonedParty) do
-        AD.ExpireDefeatStateInTime(victim, 30)
+        Utils.Debug("Expiring defeat for char: " .. victim)
+        Ext.Timer.WaitFor(100, AD.ExpireDefeatStateInTime(victim, 30))
     end
 end
 
@@ -486,7 +490,10 @@ function AD.CombatEnded(combat)
 end
 
 function AD.StatusApplied(object, status, causee, storyActionID)
-    if Osi.HasAppliedStatusOfType(object, "DOWNED") == 1 then -- seems to be this runs before it is added to the defeat db...
+    if Osi.GetStatusType(status) == "DOWNED" then -- seems to be this runs before it is added to the defeat db...
+        if Utils.MCMGet("downed_protection") then
+            Osi.ApplyStatus(object, "AD_DONT_KILL_ME", 6, 100) --prevent enemies from comboing down the downed npc
+        end
         local combatguid = Osi.CombatGetGuidFor(object)
         if combatguid ~= nil then
             Utils.Debug("ALLY COMBATANT DOWNED: Start defeat check for combat: "..combatguid)
@@ -666,10 +673,39 @@ function AD.Stabilized(object)
         Utils.Debug(object .. " stabilized out of combat, reviving.")
         Osi.ApplyStatus(object, "AD_OOC_DOWNED", 100, 0)
     end
-
 end
 
+function AD.SoftLockFix()
+    Utils.Warn("ATTEMPTING SOFTLOCK FIX...")
+    AD.CmdForceEndScenario()
+    Utils.DelayedCall(1000, SoftLockFix2)
+end
 
+function SoftLockFix2()
+    FixPermaDowned()
+    FixNoHpParty()
+    --Utils.DelayedCall(1000, Osi.PROC_GameOver_CheckGameOver()) -- gameover check for dead party 
+end
+
+function FixNoHpParty()
+    local party = DBUtils.GetPartyMembers()
+    for _,p in pairs(party) do
+        if Osi.IsDead(p) ~= 1 and Osi.HasAppliedStatusOfType(p, "DOWNED") ~= 1 and Osi.GetHitpoints(p) == 0  then
+            Utils.Warn("Party Member " .. p .. " has 0 hp and is not dead/downed, fixing.")
+            Osi.SetHitpoints(p, 1)
+        end
+    end
+end
+
+function FixPermaDowned()
+    local party = DBUtils.GetPartyMembers()
+    for _,p in pairs(party) do
+        if Osi.IsDead(p) ~= 1 and Osi.HasAppliedStatusOfType(p, "DOWNED") == 1  then
+            Utils.Warn("Party Member " .. p .. " might be perma-downed, fixing.")
+            AD.ExpireDefeatStateInTime(p, 6)
+        end
+    end
+end
 -- Commands --
 
 function AD.CmdSurrender()

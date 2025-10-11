@@ -37,4 +37,35 @@ Ext.RegisterNetListener("AbsoluteDefeat_ScenariosLoaded", function(channel, payl
     loadScenarios(UI.Scenarios)
 end)
 
+local function AD_AttemptSoftlockFix()
+    if not Ext or not Ext.Net then
+        Ext.Print.Error("Ext, Ext.Net are not available.")
+        return
+    end
+
+    Ext.Net.PostMessageToServer("AD_AttemptSoftlockFix", "")
+end
+
+local function AD_Surrender()
+    if not Ext or not Ext.Net then
+        Ext.Print.Error("Ext, Ext.Net are not available.")
+        return
+    end
+
+    Ext.Net.PostMessageToServer("AD_Surrender", "")
+end
+
+-- Register event button callbacks
+if MCM.EventButton and MCM.EventButton.RegisterCallback then
+    MCM.EventButton.RegisterCallback("btn_softlockfix", function()
+        AD_AttemptSoftlockFix()
+    end)
+
+    MCM.EventButton.RegisterCallback("btn_surrender", function()
+        AD_Surrender()
+    end)
+end
+
+
+
 return UI
