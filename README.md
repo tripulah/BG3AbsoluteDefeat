@@ -41,7 +41,6 @@ Download the .zip file and install using BG3MM or manually extract to your mods 
 
 - [Mod Configuration Menu 1.33+](https://www.nexusmods.com/baldursgate3/mods/9162)
 - BG3 Script Extender v24+ (easily installed with BG3MM through its Tools tab)
-- AbsoluteDefeat Resources - Used for displaying the overhead dialog options during the sample defeat scenarios. Without it, the npcs would stay silent during the default defeat scenarios.
 
 ## Compatability
 - Can be installed or uninstalled at any time
