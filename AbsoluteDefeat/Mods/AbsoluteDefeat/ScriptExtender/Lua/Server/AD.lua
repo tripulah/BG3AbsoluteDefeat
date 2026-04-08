@@ -437,7 +437,9 @@ function StartDefeatScenario(combatguid)
     Utils.Debug("EXPIRING DEFEAT")
     for i, victim in ipairs(defeatedNotImprisonedParty) do
         Utils.Debug("Expiring defeat for char: " .. victim)
-        Ext.Timer.WaitFor(100, AD.ExpireDefeatStateInTime(victim, 30))
+        Ext.Timer.WaitFor(100, function()
+            AD.ExpireDefeatStateInTime(victim, 30)
+        end)
     end
 end
 
